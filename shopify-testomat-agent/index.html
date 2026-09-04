@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shopify Testomat Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4eddc; --paper-2:#ebe2cc; --ink:#1c1a17; --ink-2:#4a453d; --ink-3:#7d766a;
+    --rule:#c9bda0; --vermilion:#c8401f; --teal:#1f6f5f; --ochre:#b8860b; --plum:#5b4a7a;
+    --pass:#2f7d4f; --fail:#b3261e; --skip:#8a8378;
+    --stamp:#c8401f;
+    --serif:"Fraunces", Georgia, "Times New Roman", serif;
+    --mono:"IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45}
+  .deck{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+  .slide{position:relative;min-height:100vh;scroll-snap-align:start;background:var(--paper);
+    background-image:
+      linear-gradient(rgba(28,26,23,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(28,26,23,.045) 1px, transparent 1px);
+    background-size:32px 32px;
+    padding:56px 72px 64px; display:flex;flex-direction:column;border-bottom:6px solid var(--ink)}
+  .slide::after{content:"";position:absolute;inset:14px;border:1px solid var(--rule);pointer-events:none}
+  .slide::before{content:attr(data-n) " / 24";position:absolute;right:28px;bottom:20px;font:600 12px var(--mono);color:var(--ink-3);letter-spacing:.08em}
+  .kicker{font:600 12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--vermilion);margin:0 0 10px}
+  h1{font:800 clamp(40px,6vw,84px)/1.0 var(--serif);margin:0 0 18px;letter-spacing:-.02em}
+  h2{font:600 clamp(28px,3.6vw,48px)/1.08 var(--serif);margin:0 0 22px;letter-spacing:-.015em}
+  h3{font:600 20px/1.2 var(--serif);margin:0 0 8px}
+  p{margin:0 0 12px;max-width:68ch;color:var(--ink-2)}
+  .lede{font-size:20px;color:var(--ink);max-width:62ch}
+  .src{font:400 12px var(--mono);color:var(--ink-3);margin-top:auto;padding-top:14px;border-top:1px dashed var(--rule)}
+  .src b{color:var(--ink-2);font-weight:600}
+  .grid{display:grid;gap:22px}
+  .g2{grid-template-columns:1fr 1fr}
+  .dense .card{padding:12px 14px}.dense .card p{font-size:13.5px}.dense-stat .big{font-size:clamp(34px,4vw,56px)}.dense-stat .note{font-size:12.5px}.stories .card{padding:12px 14px}.stories .card p{font-size:12.8px}.stories .card h3{font-size:16px}.slide[data-n="21"] td{padding:8px 12px;font-size:14px}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:rgba(255,255,255,.55);border:1px solid var(--rule);padding:18px 20px;position:relative}
+  .card.ink{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .card.ink p,.card.ink h3{color:var(--paper)}
+  .card.ink .mono{color:#e7dcc0}
+  .mono{font-family:var(--mono);font-size:13.5px}
+  code,pre{font-family:var(--mono)}
+  pre{background:#1c1a17;color:#efe6d1;padding:16px 18px;font-size:13px;line-height:1.5;overflow:auto;border-left:4px solid var(--vermilion);margin:0}
+  code.inl{background:rgba(28,26,23,.08);padding:1px 6px;border-radius:2px;font-size:.92em}
+  table{border-collapse:collapse;width:100%;font-size:14.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  td:first-child{font-weight:500}
+  .stamp{position:absolute;right:64px;top:54px;transform:rotate(-8deg);border:3px solid var(--stamp);color:var(--stamp);
+    font:800 15px/1.1 var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:10px 14px;opacity:.9;mix-blend-mode:multiply}
+  .stamp small{display:block;font-weight:400;font-size:11px;letter-spacing:.08em;margin-top:4px}
+  .tag{display:inline-block;font:600 11.5px var(--mono);letter-spacing:.06em;padding:3px 8px;border:1px solid currentColor;border-radius:2px;margin:2px 4px 2px 0}
+  .t-pass{color:var(--pass)}.t-fail{color:var(--fail)}.t-skip{color:var(--skip)}.t-teal{color:var(--teal)}.t-verm{color:var(--vermilion)}.t-plum{color:var(--plum)}.t-ochre{color:var(--ochre)}
+  .big{font:800 clamp(44px,6vw,86px)/1 var(--serif);letter-spacing:-.03em;color:var(--ink)}
+  .stat{border-top:3px solid var(--ink);padding-top:10px}
+  .stat .lbl{font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+  .stat .note{font-size:13px;color:var(--ink-2);margin-top:6px}
+  .row{display:flex;gap:22px;align-items:flex-start}
+  .col{flex:1;min-width:0}
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  ol.steps li{counter-increment:s;background:rgba(255,255,255,.55);border:1px solid var(--rule);padding:14px 16px 14px;position:relative;font-size:14px;color:var(--ink-2)}
+  ol.steps li::before{content:counter(s,decimal-leading-zero);font:800 30px/1 var(--serif);color:var(--vermilion);display:block;margin-bottom:6px}
+  ol.steps li b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+  svg{overflow:visible} svg text{font-family:var(--sans)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font:600 12.5px var(--mono);color:var(--ink-2);margin-top:8px}
+  .legend span::before{content:"";display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-2px;border-radius:2px;background:var(--c)}
+  .quote{font:300 italic clamp(20px,2.4vw,30px)/1.3 var(--serif);color:var(--ink);border-left:4px solid var(--vermilion);padding-left:20px;max-width:60ch;margin:8px 0 14px}
+  .tl{position:relative;padding-left:0;list-style:none;margin:0;display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .tl li{border-top:3px solid var(--ink);padding-top:8px;font-size:13px;color:var(--ink-2)}
+  .tl li b{display:block;font:600 13px var(--mono);color:var(--vermilion);margin-bottom:4px}
+  .nav{position:fixed;right:22px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:9}
+  .nav a{width:8px;height:8px;border-radius:50%;background:rgba(28,26,23,.25);display:block}
+  .nav a.on{background:var(--vermilion)}
+  .hint{position:fixed;left:22px;bottom:16px;font:600 11px var(--mono);letter-spacing:.1em;color:var(--ink-3);z-index:9;background:rgba(244,237,220,.85);padding:4px 8px}
+  .cover{background:var(--ink);color:var(--paper);background-image:linear-gradient(rgba(244,237,220,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(244,237,220,.06) 1px,transparent 1px)}
+  .cover::after{border-color:rgba(244,237,220,.25)}
+  .cover h1,.cover p,.cover .lede{color:var(--paper)}
+  .cover .kicker{color:#f0a58a}
+  .cover .src{color:#a89f8a;border-color:rgba(244,237,220,.25)}
+  .cover .stamp{color:#f0a58a;border-color:#f0a58a;mix-blend-mode:normal}
+  .cover .big{color:var(--paper)} .cover .stat{border-top-color:var(--paper)} .cover .stat .lbl{color:#a89f8a}
+  .warn{border-left:4px solid var(--fail);padding-left:14px}
+  .ok{border-left:4px solid var(--pass);padding-left:14px}
+  ul.tight{margin:0;padding-left:18px;color:var(--ink-2);font-size:14.5px}
+  ul.tight li{margin-bottom:6px}
+  @media (max-width:900px){.slide{padding:40px 24px 56px}.g2,.g3,.g4,ol.steps,.tl{grid-template-columns:1fr}.row{flex-direction:column}.stamp{position:static;transform:none;display:inline-block;margin-bottom:12px}}
+  @media print{.deck{height:auto;overflow:visible}.slide{page-break-after:always;min-height:0;height:100vh}.nav,.hint{display:none}}
+</style>
+</head>
+<body>
+<nav class="nav" id="nav"></nav>
+<div class="hint">↑ ↓ / PgUp PgDn / клік по точці</div>
+<main class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide cover" data-n="01">
+  <div class="stamp">Для команди QA<small>стан на 4 вересня 2026</small></div>
+  <p class="kicker">BetterMe Store · редизайн · testomat.io</p>
+  <h1>Shopify Testomat Agent</h1>
+  <p class="lede">Помічник у Claude, який пише тест-кейси в testomat.io за нашими правилами, сам перевіряє частину з них на живому магазині, збирає регресію на реліз двома прогонами, готує звіт приймання і пише інструкції по функціоналу. І головне - не вигадує, не змінює того, чого не має права, і чесно каже «не знаю».</p>
+  <div class="grid g4" style="margin-top:34px">
+    <div class="stat"><div class="big">153</div><div class="lbl">кейсів написано</div></div>
+    <div class="stat"><div class="big">16</div><div class="lbl">доменів магазину</div></div>
+    <div class="stat"><div class="big">5</div><div class="lbl">речей, які він уміє</div></div>
+    <div class="stat"><div class="big">0</div><div class="lbl">вигаданих фактів у кейсах</div></div>
+  </div>
+  <div class="src"><b>testomat.io</b> - програма, у якій команда зберігає тест-кейси; як каталог із папками. <b>Домен</b> - великий розділ каталогу: сторінка товару, кошик, пошук. Усі числа зняті з файлів проєкту на 4 вересня 2026.</div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-n="02">
+  <p class="kicker">З чого все почалось</p>
+  <h2>Що ламається, коли кейси пишуться руками</h2>
+  <div class="row">
+    <div class="col">
+      <div class="grid" style="grid-template-columns:1fr;gap:14px">
+        <div class="card"><h3>Двійники</h3><p>Кілька людей пишуть паралельно, і той самий сценарій з'являється у двох папках із різними назвами. testomat.io про це не попереджає. Через місяць є два дерева замість одного.</p></div>
+        <div class="card"><h3>Папки-множники</h3><p>Природний рефлекс - зробити папку «сторінка товару для мобайлу», поруч «для UA», поруч «для набору». Той самий кейс копіюється 4-8 разів, і копії розходяться.</p></div>
+        <div class="card"><h3>Правила, які обходять</h3><p>Написати кейс «за правилами» довше, ніж «майже правильний». Тому правила обходять, і перші дві проблеми повертаються.</p></div>
+      </div>
+    </div>
+    <div class="col">
+      <svg viewBox="0 0 420 300" width="100%" role="img" aria-label="Дерево з дублікатами">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4a453d"/></marker></defs>
+        <rect x="150" y="14" width="120" height="30" fill="#1c1a17"/><text x="210" y="34" fill="#f4eddc" font-size="12" text-anchor="middle">Сторінка товару</text>
+        <g stroke="#4a453d" stroke-width="1.5" fill="none"><path d="M210 44 V70 H60 V96" marker-end="url(#ar)"/><path d="M210 44 V70 H160 V96" marker-end="url(#ar)"/><path d="M210 44 V70 H260 V96" marker-end="url(#ar)"/><path d="M210 44 V70 H360 V96" marker-end="url(#ar)"/></g>
+        <g font-size="10" text-anchor="middle">
+          <rect x="10" y="98" width="100" height="26" fill="#ebe2cc" stroke="#c9bda0"/><text x="60" y="115">...для набору</text>
+          <rect x="110" y="98" width="100" height="26" fill="#ebe2cc" stroke="#c9bda0"/><text x="160" y="115">...для добавок</text>
+          <rect x="210" y="98" width="100" height="26" fill="#ebe2cc" stroke="#c9bda0"/><text x="260" y="115">...для мобайлу</text>
+          <rect x="310" y="98" width="100" height="26" fill="#ebe2cc" stroke="#c9bda0"/><text x="360" y="115">...для UA</text>
+        </g>
+        <g font-size="10" fill="#4a453d" text-anchor="middle"><text x="60" y="150">Add to cart</text><text x="160" y="150">Add to cart</text><text x="260" y="150">Add to cart</text><text x="360" y="150">Add to cart</text></g>
+        <g stroke="#c8401f" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M35 140 L85 160 M35 160 L85 140"/><path d="M135 140 L185 160 M135 160 L185 140"/><path d="M235 140 L285 160 M235 160 L285 140"/><path d="M335 140 L385 160 M335 160 L385 140"/></g>
+        <text x="210" y="195" font-size="12.5" text-anchor="middle" fill="#c8401f" font-weight="600">один кейс × 4 папки = 4 версії, що розходяться</text>
+        <text x="210" y="228" font-size="12" text-anchor="middle" fill="#1f6f5f" font-weight="600">Наше рішення: один кейс,</text><text x="210" y="244" font-size="12" text-anchor="middle" fill="#1f6f5f" font-weight="600">а «мобайл», «UA», «набір» - це лейбли на ньому</text>
+        <rect x="95" y="252" width="230" height="30" fill="#1f6f5f"/><text x="210" y="272" fill="#f4eddc" font-size="11" text-anchor="middle">device: mobile · market: UA · template: bundle</text>
+      </svg>
+    </div>
+  </div>
+  <div class="quote">Поки над кейсами працює одна людина, цих проблем не видно. Вони приходять, коли людей стає троє, а кейсів - тисяча. Переробляти тоді - дуже дорого.</div>
+  <div class="src"><b>Лейбл</b> (label, ярлик) - позначка на кейсі: «мобайл», «UA», «шаблон набору». Один кейс може мати багато лейблів, і за ними кейси фільтруються.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-n="03">
+  <p class="kicker">Що це таке</p>
+  <h2>П'ять речей, які він уміє</h2>
+  <div class="grid g3" style="gap:14px">
+    <div class="card"><h3>1. Написати тест-кейси</h3><p>Даєш задачу з Jira, адресу сторінки або описуєш словами - він каже, у який домен і сьют це йде, і пише кейси за нашими правилами: назва за шаблоном, кроки простою англійською, лейбли із затверджених списків.</p></div>
+    <div class="card"><h3>2. Перевірити задачу на dev</h3><p>Робить прогін: виконує ту частину кейсів, яку може виконати машина, і сам дивиться живу сторінку під прев'ю-темою. Віддає три списки: зійшлось / не зійшлось / не перевіряв і чому.</p></div>
+    <div class="card"><h3>3. Підготувати звіт приймання</h3><p>Після перевірки задачі кладе три чернетки: сторі баг для розробника, коментар із питаннями для дизайну і менеджменту, звіт для QA з вердиктом і межами. Сам нічого не постить - публікуєш ти.</p></div>
+    <div class="card"><h3>4. Зібрати регресію на реліз</h3><p>Даєш перелік задач, які їдуть, - він знаходить їхні кейси, добирає радіус зачеплення по лейблах і <b>сам створює два прогони в testomat</b>: регресію на прев'ю-темі до релізу і приймання на проді після. Окремо називає задачі, під які кейсів немає.</p></div>
+    <div class="card"><h3>5. Написати інструкцію по функціоналу</h3><p>Для Confluence публікується рівно один вид документа: як фіча працює, що заповнити в адмінці, де це видно. Читач - контент-команда. Покриття і звіти прогонів у Confluence не їдуть: для них є testomat.</p></div>
+    <div class="card ink"><h3>Усе це - в одному чаті</h3><p>Українською або англійською. За кожним умінням стоять скрипти (невеликі програми, які роблять механічну частину однаково щоразу) і правила, які Олена затвердила і які він не може обійти.</p></div>
+  </div>
+  <div class="src"><b>Скіл</b> - інструкція для Claude, як працювати в конкретній ролі; тут - «QA нашого редизайну». <b>Сьют</b> (suite) - підпапка всередині домену. <b>dev</b> - тестове середовище. <b>Прев'ю-тема</b> - неопублікована версія теми магазину, яку видно за спеціальним посиланням. <b>Прогін</b> - виконання кейсів. <b>Регресія</b> - перевірка, що після змін не зламалось старе.</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-n="04">
+  <p class="kicker">На чому він тримається</p>
+  <h2>П'ять принципів, які пояснюють його поведінку</h2>
+  <div class="grid g3">
+    <div class="card ink"><h3>1 · Не вигадує</h3><p>Кожне твердження має джерело: тікет, макет, відповідь сайту, файл. Немає джерела - каже «не знайшла підтвердження, шукала тут, тут і тут». Розрізняє словами: <i>підтверджено</i>, <i>припускаю</i>, <i>не знаю</i>.</p></div>
+    <div class="card ink"><h3>2 · Спершу шукає сам</h3><p>Перед тим як спитати тебе, перевірить Jira, Confluence, Figma, сам магазин і testomat. Питає лише коли відповіді немає ніде, або коли рішення не його права.</p></div>
+    <div class="card ink"><h3>3 · Очікування - з вимоги</h3><p>Порядок довіри: макет у Figma → опис задачі і PRD → слово QA. Коментар розробника «зробили інакше» - не істина, а сигнал розходження. Кейс не підганяється під те, як сайт працює зараз.</p></div>
+    <div class="card ink"><h3>4 · Не робить за людину</h3><p>Не створює нові домени і сьюти, не заводить нові значення лейблів, не ставить «готово». Замість цього пише коротку пропозицію: чого саме бракує і хто може дати.</p></div>
+    <div class="card ink"><h3>5 · Чесний про неперевірене</h3><p>Результат - одне з трьох: зійшлось / не зійшлось / не перевіряв. Для «не перевіряв» завжди названа причина. «Не перевіряв» ніколи не стає «зійшлось».</p></div>
+    <div class="card"><h3>Чому це важливо</h3><p>Звичайний чат-помічник відповідає впевнено завжди - і коли знає, і коли ні. Тут упевненість - окреме число, а відмова - окремий результат із назвою. Тому його відповіді можна перевіряти, а не тільки читати.</p></div>
+  </div>
+  <div class="src"><b>PRD</b> (product requirements document) - документ із вимогами до фічі, зазвичай у Confluence. <b>Figma</b> - де лежать макети дизайну. <b>Jira</b> - де лежать задачі.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-n="05">
+  <p class="kicker">Де лежать кейси</p>
+  <h2>Одне дерево з 16 доменів, і лейбли замість папок</h2>
+  <div class="row">
+    <div class="col">
+      <h3>Домени - за типом сторінки або частиною магазину</h3>
+      <p class="mono" style="line-height:1.75;font-size:13px">01 Доступність сайту · 02 Головна і шапка/футер · 03 Каталог і фільтри · 04 Пошук · <b>05 Сторінка товару (PDP)</b> · 06 Лендінги і контент · <b>07 Кошик</b> · <b>08 Оформлення замовлення (Checkout)</b> · 09 Після покупки і кабінет · 10 Ціни і промо · 11 Маркети і мови · 12 Інтеграції і апки · 13 Експерименти · 14 API і контракти · 15 Нефункціональне (швидкість, SEO, доступність) · <b>16 Компоненти дизайн-системи</b></p>
+      <p>Усередині кожного домену - сьюти за сценаріями користувача: «перша покупка», «варіанти товару», «промокод у кошику». Разом 129 сьютів. Це дерево створене один раз, і помічник його не змінює.</p>
+    </div>
+    <div class="col">
+      <h3>Лейбли - умови, за яких кейс актуальний. Їх 13</h3>
+      <div><span class="tag t-teal">layer - рівень: інтерфейс / дані / API</span><span class="tag t-teal">type - вид перевірки</span><span class="tag t-teal">journey - сценарій користувача</span><span class="tag t-plum">template - шаблон сторінки</span><span class="tag t-plum">market - країна</span><span class="tag t-plum">locale - мова</span><span class="tag t-plum">audience - гість / клієнт</span><span class="tag t-plum">device - десктоп / мобайл</span><span class="tag t-ochre">surface - де саме на сторінці</span><span class="tag t-ochre">app - яка апка задіяна</span><span class="tag t-ochre">flag - експеримент</span><span class="tag t-ochre">data_need - які дані потрібні</span><span class="tag t-verm">owner - хто відповідає</span></div>
+      <div class="card" style="margin-top:14px"><b>Що це дає:</b> «прогнати все на мобайлі для UA по сторінці товару» - це фільтр по лейблах, а не пошук по папках. Кейс один, умов багато. Папок «Smoke» і «Regression» немає взагалі - це теж фільтри.</div>
+    </div>
+  </div>
+  <div class="src">Кожен лейбл має закритий список значень (наприклад, market: 27 країн + «усі»). Нове значення додає тільки Олена. <b>Запам'ятовувати 13 лейблів не треба</b> - помічник ставить їх сам, ти лише дивишся, чи схоже на правду.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-n="06">
+  <p class="kicker">Теги і автоматизація</p>
+  <h2>Хто вирішує, що автоматизувати - і як це видно в testomat</h2>
+  <div class="row">
+    <div class="col">
+      <p class="lede">Окрім 13 лейблів, у кейса є <b>теги</b> (tags) - короткі машинні позначки із закритого списку з шести. <b>Помічник ставить їх сам, коли пише кейс</b> - як пропозицію. Останнє слово про автоматизацію - за нашим автоматизатором.</p>
+      <table style="font-size:14px">
+        <thead><tr><th>Тег</th><th>Що означає</th><th>Хто ставить</th></tr></thead>
+        <tbody>
+          <tr><td><code class="inl">@smoke</code></td><td>найкоротший критичний зріз, зазвичай разом із P0</td><td>помічник при написанні (стоїть на 26 кейсах)</td></tr>
+          <tr><td><code class="inl">@regression</code></td><td>входить у повну ручну регресію</td><td>помічник при написанні (145 зі 153); у регресії на реліз доставляє тим, кому бракує</td></tr>
+          <tr><td><code class="inl">@automation-candidate</code></td><td>варто автоматизувати: стабільний, повторюваний, без судження «на око»</td><td>помічник пропонує при написанні (29 кейсів); автоматизатор погоджується або знімає</td></tr>
+          <tr><td><code class="inl">@automated</code></td><td>уже покритий автотестом</td><td><b>тільки автоматизатор</b>, коли автотест є. Помічник не ставить ніколи</td></tr>
+          <tr><td><code class="inl">@manual</code></td><td>свідомо лишається ручним: exploratory, візуальне судження</td><td>помічник при написанні (22 кейси); можна змінити</td></tr>
+          <tr><td><code class="inl">@flaky</code></td><td>нестабільний у прогоні - сигнал ремонту або зняття з плану</td><td>хто побачив у прогоні. Помічник не ставить</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <div class="card ink"><h3>Життєвий цикл автоматизації</h3>
+        <ol style="margin:6px 0 0;padding-left:20px;color:#f4eddc;font-size:15px;line-height:1.55">
+          <li>Помічник пише кейс і сам оцінює: стабільний, повторюваний, без «на око»? → ставить <code class="inl" style="background:rgba(244,237,220,.15)">@automation-candidate</code>. Ні → <code class="inl" style="background:rgba(244,237,220,.15)">@manual</code>.</li>
+          <li>Автоматизатор переглядає кандидатів у плані «Automation backlog»: погоджується, знімає або додає своїх.</li>
+          <li>Автотест написаний → автоматизатор ставить <code class="inl" style="background:rgba(244,237,220,.15)">@automated</code> і <b>знімає</b> candidate.</li>
+        </ol>
+        <p style="font-size:13.5px;margin-top:10px">Candidate і automated на одному кейсі одночасно - заборонено: це два стани однієї осі.</p>
+      </div>
+      <div class="card" style="margin-top:12px"><h3>Де це видно</h3><p>Тест-план «Automation backlog» у testomat - це запит <code class="inl">tag = @automation-candidate</code>. Автоматизатор відкриває його і бачить свою чергу; коли тег змінюється на automated, кейс із черги зникає сам.</p></div>
+      <div class="card warn" style="margin-top:12px"><p style="font-size:13.5px;margin:0"><b>Не плутати з machine checks помічника.</b> Machine checks - те, що помічник перевіряє сам під час прогону: сторінка віддає 200, елемент є в HTML, у кошику 2 рядки. Автотести автоматизатора - окремий код в окремому репо. Кейс може мати machine checks і не бути @automated, і навпаки.</p></div>
+    </div>
+  </div>
+  <div class="src">Числа - з 153 кейсів, написаних помічником на 4 вересня. Нові значення тегів, як і лейблів, додає тільки Олена; наявні теги міняє будь-хто з команди QA. Джерело: словник лейблів, розділ 1.1.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-n="07">
+  <p class="kicker">Ще чотири правила, які варто знати</p>
+  <h2>Пріоритет, owner, тест-плани і accessibility</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Пріоритет - нативне поле, P0..P3</h3><p>Пріоритет визначає, куди кейс потрапляє автоматично: P0 → smoke після деплою, P0-P2 → повна регресія, P0-P1 → радіус зачеплення в регресії на реліз. Тому це не оцінка «на око», а рішення про те, як часто кейс проганяється.</p></div>
+    <div class="card"><h3>Owner - роль, не людина</h3><p>Чотири значення: <code class="inl">tl</code>, <code class="inl">qa-man-1</code>, <code class="inl">qa-man-2</code>, <code class="inl">qa-auto</code>. Хто саме за роллю - записано в одному місці. Люди міняються, а кейси з іменами всередині довелось би переписувати масово. Owner - єдиний лейбл, який кейс може мати відмінним від свого сьюта.</p></div>
+    <div class="card"><h3>Тест-плани замість папок</h3><p>Папок Smoke / Regression / Release_2.4 у дереві немає і не буде. Замість них - плани як запити по лейблах: «Smoke after deploy» = P0; «Full regression» = P0-P2 і layer=ui; «PDP template matrix» = домен PDP і будь-який template; «Market: UA»; «Mobile critical» = mobile і P0-P1; «API contracts» = layer=api; «Automation backlog» = @automation-candidate. Треба новий зріз - це новий запит, а не нова папка.</p></div>
+    <div class="card"><h3>Accessibility - кейс на кожну задачу</h3><p>Кожна задача, що створює або змінює інтерактивний елемент чи контент на вітрині, дістає щонайменше один кейс із <code class="inl">layer=a11y</code>. Скоуп - шість критеріїв, не весь WCAG: alt-текст, субтитри, клавіатура, name/role/value, підписи полів, контраст. Форма - один параметризований кейс на критерій із таблицею елементів, а не шість кейсів на кожен компонент. Якщо жоден критерій не застосовний - це записано рядком, а не пропущено мовчки.</p></div>
+  </div>
+  <div class="card ok" style="margin-top:14px"><p style="margin:0;font-size:14.5px"><b>Правило про домен, яке часто дивує:</b> домен кейса - це домен його <i>останнього твердження</i>, а не точки входу. Кейс «з картки в галереї натиснути quick add → у кошику один рядок» лежить там, про що його останній «Expected». Помічник це знає, і саме тому іноді кладе кейс не туди, куди здається очевидним - дивись на останній крок.</p></div>
+  <div class="src">Джерела: словник лейблів, розділи 1 і 5; чекліст готовності кейса; правило accessibility від 30 серпня. <b>WCAG</b> - міжнародний стандарт доступності вебу. <b>a11y</b> - скорочення від accessibility.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-n="08">
+  <p class="kicker">Як пишеться кейс</p>
+  <h2>Принцип: від вимоги до перевірюваного результату</h2>
+  <div class="row">
+    <div class="col">
+      <ol class="steps" style="grid-template-columns:1fr 1fr">
+        <li><b>Звідки очікування</b>Спершу вимога: макет, опис задачі, PRD. Не сайт. Якщо вимоги немає ніде - помічник питає постановника, а не придумує.</li>
+        <li><b>Один кейс - одна перевірювана думка</b>Назва: «хто → що робить → що має статись». Результат завжди конкретний: «shows price 2 300 UAH», а не «works correctly».</li>
+        <li><b>Варіанти - рядками таблиці</b>Кілька шаблонів, маркетів чи точок входу - це рядки параметрів усередині одного кейса, а не копії кейса.</li>
+        <li><b>Мова - проста англійська</b>Кейс виконує будь-хто в команді, для кого англійська не рідна. Короткі речення, звичайні слова, технічні назви як є.</li>
+      </ol>
+    </div>
+    <div class="col">
+      <h3>Що містить кожен кейс</h3>
+      <table>
+        <tbody>
+          <tr><td>ID</td><td><code class="inl">SHOP-PDP-CORE-01</code>: магазин - домен - сьют - номер. Номер ніколи не перевикористовується.</td></tr>
+          <tr><td>Назва</td><td>[ID] Хто → дія → результат. Рівно одна стрілка.</td></tr>
+          <tr><td>Передумови</td><td>Що має бути в магазині до початку: товар із двома опціями, порожній кошик.</td></tr>
+          <tr><td>Параметри</td><td>Таблиця варіантів, якщо кейс перевіряє одне й те саме в кількох умовах.</td></tr>
+          <tr><td>Кроки + очікуване</td><td>Нумеровані кроки, під кожним - що має статись.</td></tr>
+          <tr><td>Постумови</td><td>Що має лишитись після: «кошик не змінився».</td></tr>
+          <tr><td>Лейбли</td><td>13 лейблів із закритих списків.</td></tr>
+          <tr><td>Фікстури</td><td>Які тестові дані потрібні - за роллю, не за назвою товару (наступні слайди).</td></tr>
+          <tr><td>Machine checks</td><td>Блок «що з цього може перевірити машина» - для автоматичного прогону.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="src">Правила назв, лейблів і структури затверджені Оленою і записані; помічник перевіряє кожен кейс проти них до запису. <b>Machine checks</b> - «машинні перевірки», список того, що в кейсі можна перевірити без людини.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-n="09">
+  <p class="kicker">Реальний приклад</p>
+  <h2>Кейс SHOP-PDP-CORE-01, скорочено</h2>
+  <div class="row">
+    <div class="col" style="flex:1.4">
+<pre style="font-size:11.8px;line-height:1.55">[SHOP-PDP-CORE-01] Guest opens a PDP from each catalogue entry point
+→ the product that entry point pointed at renders with matching title, address and breadcrumbs
+
+Preconditions
+- {handle_multivariant} is active and published in the current market
+- {collection_small} has fewer than 5 products, so no pagination
+
+Parameters
+| entry_point   | start from                        | expect this product     |
+| plp_card      | /collections/{collection_small}   | product of the card     |
+| search_result | /search?q=&lt;product name&gt;          | product of the result   |
+| direct_link   | /products/{handle_multivariant}   | {handle_multivariant}   |
+
+Steps
+1. Open the entry point.            Expected: page returns 200
+2. Note title and main image, go to PDP.   Expected: the SAME product opens
+3. Check address and breadcrumbs.   Expected: address has this product's handle
+4. Check gallery, price, add to cart, description.   Expected: all four present, no placeholders
+5. Check the option selector.       Expected: present only if the product has options
+
+Postconditions
+- Cart is unchanged.
+
+Labels: layer=ui · type=functional · journey=J1_first_purchase · surface=pdp
+        market=all · device=desktop,mobile · template=product · owner=Olena
+Fixtures needed: {handle_multivariant}, {collection_small}</pre>
+    </div>
+    <div class="col">
+      <div class="card"><h3>На що дивитись</h3><ul class="tight"><li><b>Три точки входу - один кейс.</b> Рядки таблиці, не три копії.</li><li><b>Жодної назви товару.</b> Тільки <code class="inl">{handle_multivariant}</code> - «товар із кількома опціями». Який саме - записано окремо.</li><li><b>Кожен крок має «Expected».</b> Немає кроків «перевірити, що все ок».</li><li><b>Постумова.</b> Кейс сам каже, що він не чіпає.</li><li><b>Нотатки</b> (не показані) пояснюють, чому кейс не дублює сусідній.</li></ul></div>
+      <div class="card" style="margin-top:12px"><h3>Machine checks для нього</h3><p class="mono" style="font-size:12px">step 1: route_status /products/{handle_multivariant} → 200<br>step 4: dom_visible form[action='/cart/add']<br>step 5: dom_visible variant-radios<br>steps 2-3: manual (needs human eyes)</p><p style="font-size:13px">Тобто: крок 1 і 4-5 машина перевірить сама, кроки 2-3 - людина.</p></div>
+    </div>
+  </div>
+  <div class="src"><b>PDP</b> - product detail page, сторінка товару. <b>PLP</b> - product list page, сторінка списку товарів (колекція). <b>Handle</b> - коротка адреса товару в Shopify, частина URL після /products/. <b>Breadcrumbs</b> - шлях «Каталог › Категорія › Товар» над назвою. <b>200</b> - код відповіді «сторінка є».</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-n="10">
+  <p class="kicker">Фікстури</p>
+  <h2>Що це, для чого і як зрозуміти</h2>
+  <div class="row">
+    <div class="col">
+      <div class="card ink"><h3>Що це</h3><p><b>Фікстура</b> - заготовлені тестові дані з потрібною властивістю: конкретний товар, колекція, сторінка або клієнт у магазині. У кейсі фікстура називається за <b>роллю</b> у фігурних дужках: <code class="inl">{handle_soldout}</code> - «товар, якого немає в наявності», <code class="inl">{handle_multivariant}</code> - «товар із кількома опціями», <code class="inl">{collection_small}</code> - «маленька колекція без пагінації».</p></div>
+      <div class="card" style="margin-top:12px"><h3>Для чого</h3><p>Товари в магазині міняють мерчандайзери без нас: змінили залишок, зняли з продажу, перейменували. Якщо в кейсі стоїть реальна назва - кейс ламається, і виглядає це як баг сайту. Якщо стоїть роль, а реальний товар записаний в одному місці - ламається один рядок реєстру, і помічник каже точно: «тестові дані застаріли», а не «сторінка товару зламалась».</p></div>
+      <div class="card" style="margin-top:12px"><h3>Як зрозуміти, читаючи кейс</h3><p>Бачиш слово у фігурних дужках, що починається з <code class="inl">handle_</code>, <code class="inl">collection_</code>, <code class="inl">variant_</code> - це фікстура. Її роль зрозуміла з назви. Який реальний товар за нею - можна спитати помічника: «що зараз стоїть за {handle_soldout}?».</p></div>
+    </div>
+    <div class="col">
+      <svg viewBox="0 0 440 220" width="100%" role="img" aria-label="Назва в кейсах проти ролі в реєстрі">
+        <g font-size="12">
+          <text x="110" y="20" text-anchor="middle" font-weight="600" fill="#b3261e">назва товару в 15 кейсах</text>
+          <g fill="#ebe2cc" stroke="#c9bda0"><rect x="20" y="34" width="180" height="16"/><rect x="20" y="54" width="180" height="16"/><rect x="20" y="74" width="180" height="16"/><rect x="20" y="94" width="180" height="16"/><rect x="20" y="114" width="180" height="16"/></g>
+          <g stroke="#b3261e" stroke-width="2.5" stroke-linecap="round"><path d="M30 38 L60 50 M30 50 L60 38"/><path d="M30 58 L60 70 M30 70 L60 58"/><path d="M30 78 L60 90 M30 90 L60 78"/><path d="M30 98 L60 110 M30 110 L60 98"/><path d="M30 118 L60 130 M30 130 L60 118"/></g>
+          <text x="110" y="160" text-anchor="middle" fill="#4a453d">мерчандайзер змінив залишок →</text>
+          <text x="110" y="178" text-anchor="middle" fill="#b3261e" font-weight="600">15 «багів сторінки товару»</text>
+          <text x="330" y="20" text-anchor="middle" font-weight="600" fill="#1f6f5f">роль у кейсах + реєстр</text>
+          <g fill="#ebe2cc" stroke="#c9bda0"><rect x="240" y="34" width="180" height="16"/><rect x="240" y="54" width="180" height="16"/><rect x="240" y="74" width="180" height="16"/><rect x="240" y="94" width="180" height="16"/><rect x="240" y="114" width="180" height="16"/></g>
+          <g fill="#1f6f5f" font-size="9.5"><text x="250" y="46">{handle_soldout}</text><text x="250" y="66">{handle_soldout}</text><text x="250" y="86">{handle_soldout}</text><text x="250" y="106">{handle_soldout}</text><text x="250" y="126">{handle_soldout}</text></g>
+          <rect x="255" y="142" width="150" height="26" fill="#1c1a17"/><text x="330" y="159" fill="#f4eddc" text-anchor="middle" font-size="10.5">реєстр: 36 записів</text>
+          <text x="330" y="192" text-anchor="middle" fill="#1f6f5f" font-weight="600">1 запис → «дані застаріли»</text>
+        </g>
+      </svg>
+      <div class="card warn" style="margin-top:8px"><h3>Що з цього треба пам'ятати</h3><ul class="tight"><li><b>Не вписуй назву товару в кейс.</b> Ніколи. Ні в кроки, ні в передумови.</li><li>Якщо потрібного товару в магазині немає - це <b>питання до Олени</b>, а не привід вписати «щось схоже». Помічник сам новий товар не заводить.</li><li>Позначка <b>volatile</b> (нестабільний) у реєстрі означає: цей товар тримається на стані, який часто міняється (залишок). Таких 16 із 36.</li></ul></div>
+    </div>
+  </div>
+  <div class="src">Реєстр фікстур - один файл у проєкті, 36 записів. У кожного є умова, яку можна перевірити на живому магазині: «залишок 0 і продаж заборонений».</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-n="11">
+  <p class="kicker">Резолвер</p>
+  <h2>Як він вирішує, куди класти кейс</h2>
+  <div class="row">
+    <div class="col">
+      <p class="lede"><b>Резолвер</b> - частина помічника, яка відповідає на питання «куди йде цей кейс». Три кроки, на кожному - число впевненості від 0 до 1.</p>
+      <div class="grid" style="grid-template-columns:1fr;gap:10px">
+        <div class="card"><b>1. Який домен?</b> Сторінка товару, кошик, пошук... Для адрес сторінок - за таблицею адрес магазину. Для тексту - за словами.</div>
+        <div class="card"><b>2. Який сьют?</b> Усередині «сторінки товару» - варіанти? галерея? кнопка «в кошик»? З голої адреси це часто не видно - тоді він показує кандидатів.</div>
+        <div class="card"><b>3. Що робити?</b> Новий кейс / схоже вже є, подивись / не знаю / бракує сьюта, лейбла чи фікстури.</div>
+      </div>
+      <p style="margin-top:14px"><b>Якщо впевненість у домені нижча за 0.55, він зупиняється</b> і каже «не знаю, ось кандидати». Це називається <b>abstain</b> - утримався. Неправильно покладений кейс гірший за відсутній: його потім ніхто не знайде.</p>
+    </div>
+    <div class="col">
+      <h3>Наскільки він точний - виміряно на 104 прикладах, які перевірила Олена</h3>
+      <svg viewBox="0 0 480 190" width="100%" role="img" aria-label="Точність за типом входу">
+        <g font-size="12" fill="#1c1a17">
+          <text x="0" y="30">адреса сторінки</text><rect x="150" y="18" width="260" height="18" fill="#ebe2cc"/><rect x="150" y="18" width="260" height="18" fill="#1f6f5f" rx="2"/><text x="418" y="32" font-weight="600">52/52</text>
+          <text x="0" y="70">тип шаблону</text><rect x="150" y="58" width="260" height="18" fill="#ebe2cc"/><rect x="150" y="58" width="260" height="18" fill="#1f6f5f" rx="2"/><text x="418" y="72" font-weight="600">16/16</text>
+          <text x="0" y="110">задача з Jira</text><rect x="150" y="98" width="260" height="18" fill="#ebe2cc"/><rect x="150" y="98" width="134" height="18" fill="#1f6f5f" rx="2"/><text x="418" y="112" font-weight="600">17/33</text>
+          <text x="0" y="150">вільний текст</text><rect x="150" y="138" width="260" height="18" fill="#ebe2cc"/><text x="418" y="152" font-weight="600">0/3</text>
+          <text x="0" y="182" fill="#7d766a" font-size="11">макет Figma, зміна теми - прикладів ще немає, не міряно</text>
+        </g>
+      </svg>
+      <div class="card ok" style="margin-top:8px"><b>Що з цього випливає для роботи:</b> адресу або тип шаблону - довіряй. Задачу з Jira - перевір очима, куди поклав; <b>дивись на назву задачі</b>: український опис нічого не псує (перевірено на BMS-6719 і BMS-6721 - обидві лягли правильно), ламається лише випадок, коли англійська назва загальна («Initial setup»), а предмет живе тільки в українському тексті. Тоді назви домен сам: «це кошик».</div>
+    </div>
+  </div>
+  <div class="src"><b>Confidence</b> (впевненість) - число від 0 до 1, яке помічник ставить кожному своєму рішенню. Він не «думає» щоразу по-новому, а звіряє з таблицею адрес і знімком дерева, тому на однаковий вхід завжди однакова відповідь.</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-n="12">
+  <p class="kicker">Як із ним працювати</p>
+  <h2>П'ять сценаріїв - і що робиш ти на кожному</h2>
+  <table style="font-size:13.5px">
+    <thead><tr><th>Ти кажеш</th><th>Він робить</th><th>Ти робиш</th></tr></thead>
+    <tbody>
+      <tr><td>«Заведи кейси на BMS-6807» / «на сторінку /products/...»</td><td>Резолвер розкладає по дереву з числами впевненості. Пише кейси. Якщо бракує сьюта, лейбла чи фікстури - не пише, а дає список, чого бракує. Показує план, чекає «ок». Записує і <b>перечитує</b> записане.</td><td>Перевіряєш очима домен і назви. Кажеш «пиши». Передаєш Олені пропозиції.</td></tr>
+      <tr><td>«Перевір BMS-6719 на dev»</td><td>Виконує machine checks і сам дивиться живу сторінку під прев'ю-темою: розміри, стани, фокус, клавіатура. Спершу перевіряє, чи є збірка взагалі («у develop компонента ще немає» - це вердикт, не баг). Віддає три списки.</td><td>Проходиш руками те, що позначено для людини. Розбираєш «не зійшлось».</td></tr>
+      <tr><td>«Зроби звіт по BMS-6719»</td><td>Кладе три файли: сторі баг (дефекти з числами: «Не так: 8. Має бути: 6»), коментар у задачу (питання у формі вибору, зі справжніми @-згадками), звіт для QA (вердикт, докази, межі прогону). <b>Нічого не постить.</b></td><td>Читаєш, правиш, публікуєш сама - дослівно або частину.</td></tr>
+      <tr><td>«Збери регресію на реліз», перелік задач</td><td>Дістає задачі з Jira, знаходить їхні кейси, добирає радіус по лейблах, <b>створює прогін «Регресія dev»</b> у testomat і дає посилання. Після релізу тим самим переліком - <b>прогін «Приймання prod»</b>. Називає задачі без кейсів.</td><td>Проходиш прогони в testomat. Дописуєш кейси на непокрите.</td></tr>
+      <tr><td>«Опиши, як працює слайд-карт»</td><td>Пише інструкцію з шести розділів (як вмикається, що заповнити в адмінці, де видно, що можна міняти, помилки, де в темі лежить) із реалізації, лінкує ТЗ і макет, публікує в Confluence у наш простір. Апрув просить у чаті.</td><td>Читаєш, апрувиш або правиш.</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;font-size:14.5px"><b>Як розмовляти:</b> українською або англійською, відповідає тією ж. Конкретно: номер задачі, адреса. Один запит - одна задача. Якщо він питає - це справді потрібно, він питає рідко. Якщо відмовляється - читай причину, вона названа.</p>
+  <div class="src">Повний гайд для колег - файл 04-tester-guide.md у цій папці. <b>Сторі баг</b> - підзадача-дефект у Jira під самою задачею. <b>ТЗ</b> - технічне завдання від бізнес-аналітика в Confluence.</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-n="13">
+  <p class="kicker">Прогін</p>
+  <h2>Що машина може перевірити сама, а що - ні</h2>
+  <div class="row">
+    <div class="col">
+      <table>
+        <thead><tr><th>Рівень</th><th>Що перевіряє</th><th>Приклад</th></tr></thead>
+        <tbody>
+          <tr><td>Дані</td><td>Чи відповідає сторінка, які дані віддає</td><td>сторінка товару віддає 200; у даних товару є ціна</td></tr>
+          <tr><td>Сторінка</td><td>Чи є потрібний елемент у HTML, який віддав сервер</td><td>є форма «додати в кошик»; є перемикач варіантів</td></tr>
+          <tr><td>Кошик</td><td>Що в кошику після дій</td><td>додали два товари → у кошику 2 рядки; sold-out товар не додається</td></tr>
+          <tr><td>Браузер</td><td>Розміри, кольори, те, що з'являється після скриптів</td><td>висота чіпа 40px</td></tr>
+          <tr><td>Людина</td><td>Усе, що треба побачити очима</td><td>«галерея виглядає як у макеті»</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px">Правило: перевіряти на найпростішому рівні, де це ще правда. Що простіше - то дешевше і надійніше.</p>
+      <p><b>Важлива межа:</b> рівень «сторінка» дивиться HTML без виконання скриптів. «Є в HTML» не завжди означає «користувач бачить» - тема може приховати елемент скриптом. Для «як виглядає» потрібен браузер або очі.</p>
+    </div>
+    <div class="col">
+      <h3>Останній повний прогін (3 вересня): 797 перевірок</h3>
+      <svg viewBox="0 0 520 70" width="100%" role="img" aria-label="239 зійшлось, 9 не зійшлось, 549 не перевірялись">
+        <rect x="0" y="14" width="156" height="34" fill="#2f7d4f" rx="3"/><rect x="158" y="14" width="6" height="34" fill="#b3261e" rx="2"/><rect x="166" y="14" width="354" height="34" fill="#8a8378" rx="3"/>
+        <text x="78" y="36" fill="#f4eddc" font-size="13" text-anchor="middle" font-weight="600">239</text><text x="343" y="36" fill="#f4eddc" font-size="13" text-anchor="middle" font-weight="600">549</text><text x="161" y="64" fill="#b3261e" font-size="11" text-anchor="middle" font-weight="600">9</text>
+      </svg>
+      <div class="legend"><span style="--c:#2f7d4f">✓ зійшлось 239</span><span style="--c:#b3261e">✕ не зійшлось 9</span><span style="--c:#8a8378">○ не перевірялись 549</span></div>
+      <div class="card" style="margin-top:14px"><h3>Що заважає машині - причини в розмітці на 4 вересня</h3><ul class="tight"><li><b>no_access 193</b> - сторінка або дані закриті для раннера</li><li><b>needs_js 85</b> - крок щось <i>робить</i> (клік, перемикання), а раннер сторінки лише читає HTML. Потрібен шар браузера у нас</li><li><b>no_selector 70</b> - нема за що зачепитись. Це <b>не</b> «чекаємо на розробників», а «пройти драбину селекторів ще раз»</li><li><b>needs_human_eyes 58</b> - потрібні очі людини, і це назавжди</li><li><b>needs_payment 20</b> - потрібна оплата, машиною ніколи</li></ul><p style="margin-top:8px;font-size:13.5px">Кожна причина - адреса роботи: кому і що зробити, щоб перевірка запрацювала.</p></div>
+    </div>
+  </div>
+  <div class="src">Останній повний прогін - 3 вересня. Старі оцінки «55% без data-testid, 90% з ними» зняті як недійсні: 85 кроків блокує не чужий атрибут, а відсутність шару взаємодії в нас. Частку автоматизації називаємо лише числом із прогону.</div>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-n="14">
+  <p class="kicker">Дві межі, які варто запам'ятати</p>
+  <h2>«Немає X» - ще не баг. «Не зійшлось» - не привід правити кейс</h2>
+  <div class="row">
+    <div class="col">
+      <div class="card"><h3>1. Відсутність предмета - ще не знахідка</h3><div class="quote" style="font-size:16px;margin:8px 0">Прогін показав три «розходження» на сторінці товару: немає кнопки Buy it now, немає поля кількості, у одного товару є форма додавання в кошик. Усе правда. Але одного запиту в Jira вистачало: задачі на сторінку товару в редизайні ще немає жодної. Відсутність очікувана, і всі три «баги» закрились самі.</div><p>Тепер помічник має правило: перед тим як казати «зламано», перевірити, чи предмет узагалі мусив уже існувати. Немає задачі - немає предмета.</p><p style="font-size:13.5px">Технічно: у перевірці вказується «корінь» - елемент, без якого перевіряти нічого. Кореня немає → результат «ще не реалізовано», не «не зійшлось». Щойно компонент викладуть, та сама перевірка запрацює без правок.</p></div>
+    </div>
+    <div class="col">
+      <div class="card warn"><h3>2. Тест не підганяють під побачене</h3><p>Прогін кошика дав 5 «не зійшлось». Чотири виявились помилкою самої перевірки: Shopify ставить новий товар у кошику першим, а не останнім, і перевірка видаляла не той рядок. Виправили перевірку - не кейс.</p><p>П'яте - ціна товару 3 900 замість очікуваних 2 300 - навмисно лишили червоним до рішення людини. Підігнати очікування під сайт означало б зафіксувати баг як норму назавжди.</p><p style="margin-top:8px"><b>Порядок дій, коли не зійшлось:</b> спершу вимога (чи правильно ми очікуємо) → потім сама перевірка (чи правильно міряємо) → і лише потім дефект.</p></div>
+    </div>
+  </div>
+  <div class="src">Обидва випадки - з прогонів 3 вересня 2026</div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-n="15">
+  <p class="kicker">Регресія на реліз</p>
+  <h2>Два прогони в testomat, і радіус зачеплення по лейблах</h2>
+  <div class="row">
+    <div class="col">
+      <p class="lede">Ти кажеш «збери регресію на реліз» і даєш перелік задач, які їдуть. Далі все робить помічник - від запиту в Jira до готового прогону в testomat із посиланням.</p>
+      <table style="font-size:14px">
+        <thead><tr><th>Прогін</th><th>Коли</th><th>Де</th><th>Що всередині</th></tr></thead>
+        <tbody>
+          <tr><td>Регресія dev</td><td>до релізу</td><td>прев'ю-тема</td><td>кейси задач релізу + радіус зачеплення + кейси, заведені за тиждень</td></tr>
+          <tr><td>Приймання prod</td><td>після релізу</td><td>опублікована тема</td><td>кейси задач релізу + короткий критичний зріз тієї самої поверхні</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px">Два прогони, бо це два питання: на прев'ю-темі перевіряють, <i>чи не зламали</i>, на проді - <i>чи доїхало</i>. Обсяг різний, і зливати їх - або гнати повну регресію на проді, або приймати реліз обсягом смоку.</p>
+      <p><b>Окремо він називає задачі, під які кейсів немає взагалі.</b> Це не примітка - це робота: покриття не існує, поки хтось не напише кейс.</p>
+    </div>
+    <div class="col">
+      <div class="card ink"><h3>Радіус зачеплення - що могло зламатись разом</h3><p>Сусідство рахується не «поруч у дереві», а за <b>спільним кодом</b>: та сама секція теми (лейбл surface), той самий шаблон (template), та сама апка (app). Кейс, який ділить із правленим хоч одну ознаку, може зламатися разом із ним - навіть в іншому домені. Беруться лише P0 і P1, щоб радіус не розповзся на весь стор.</p><p class="mono" style="font-size:12.5px">Живий приклад: SHOP-NFR-SEO-01 із домену «Нефункціональне» ділить із кейсом сторінки товару апку stamped - і потрапляє в радіус PDP-релізу. Доменом цей зв'язок не побачити.</p></div>
+      <div class="card" style="margin-top:12px"><h3>Приклад на живому проєкті</h3><p style="font-size:14px">Три умовні задачі на новий шаблон PDP → 34 кейси задач + 12 у радіусі = 46 у прогоні dev, 39 у прийманні prod. За кожним кейсом у чаті - причина: з якої задачі прийшов або з ким ділить поверхню чи апку.</p></div>
+      <div class="card warn" style="margin-top:12px"><p style="font-size:13.5px;margin:0"><b>Чого цей прогін не доводить:</b> що нова тема не зламала стару. Покриття старої теми живе в іншому проєкті testomat, і помічник каже про це в звіті прямо.</p></div>
+    </div>
+  </div>
+  <div class="src"><b>Радіус зачеплення</b> (blast radius) - кейси, які могли зламатись через спільний код із правленими. <b>Смок</b> - найкоротший критичний набір перевірок. <b>P0/P1</b> - найвищі пріоритети кейсів.</div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-n="16">
+  <p class="kicker">Звіт приймальної перевірки</p>
+  <h2>Три файли, і жодного постингу без тебе</h2>
+  <div class="row">
+    <div class="col">
+      <table style="font-size:14px">
+        <thead><tr><th>Файл</th><th>Що всередині</th><th>Кому</th></tr></thead>
+        <tbody>
+          <tr><td>Сторі баг</td><td>Дефекти. Кожен пункт - три частини: назва, «Не так: 8», «Має бути: 6, і звідки це число». Числа, не прикметники. Дві групи: що правиться зараз, і що чекає на рішення дизайну.</td><td>розробник задачі</td></tr>
+          <tr><td>Коментар у задачу</td><td>Питання й уточнення - окремо від дефектів. Кожне закінчується вибором: «лишаємо як зараз чи знімаємо?». Справжні @-згадки, щоб людина отримала нотифікацію.</td><td>дизайн, менеджмент, автор ТЗ</td></tr>
+          <tr><td>Звіт для QA</td><td>Вердикт одним абзацем, таблиця «що перевірено і чим доведено», питання до приймання, кейси, і обов'язковий розділ <b>«Межі прогону»</b> - чого не перевірено і чому.</td><td>ти і команда QA</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px"><b>Чому дефекти й питання окремо.</b> На питання відповідають дизайн і менеджмент, а баг лежить у таці розробника. Змішані в одному коментарі, вони дають деву список, половина якого йому не адресована - і він або чекає, або бере в роботу неузгоджене.</p>
+      <p><b>Помічник нічого не постить.</b> Три файли лежать у проєкті, далі рішення твоє: взяти дослівно, скопіювати частину або переписати.</p>
+    </div>
+    <div class="col">
+      <div class="card"><h3>Живий приклад: BMS-6719, слайдер / чекбокс / радіо</h3>
+        <div class="quote" style="font-size:15px;margin:8px 0">«Компонент зібраний і сходиться з макетом. Дефектів із числом не знайшла. Перевірила на живій сторінці, а не в коді: 18 селекшн-контролів і 2 скролбари, геометрія, токени всіх статичних станів, фокусне кільце, ланцюг Tab, стрілки в групі радіо, клік по лейблу, незалежність інстансів. Одне розходження з макетом лишається відкритим і чекає на рішення дизайну - висота рядка в стилі subtitle.»</div>
+        <p style="font-size:13.5px">Перед цим - 2 вересня - той самий запит дав вердикт «прогнати перевірку зараз неможливо: збірки немає». Гілкова тема з'явилась 4 вересня о 13:56. Це теж результат, і він записаний, а не вгаданий.</p>
+      </div>
+    </div>
+  </div>
+  <div class="src">Формат знятий із задач, де вже спрацював: BMS-6865, BMS-6724, BMS-6719. <b>Токени</b> - іменовані значення дизайн-системи (колір, радіус, відступ). <b>Фокусне кільце</b> - рамка навколо елемента при навігації з клавіатури.</div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-n="17">
+  <p class="kicker">Документація</p>
+  <h2>У Confluence їде одне - інструкція по функціоналу</h2>
+  <div class="row">
+    <div class="col">
+      <div class="quote" style="font-size:17px">«Не потрібно зберігати в Confluence що прогнали, що не прогнали, покриття. У нас є testomat, цього достатньо. Що треба - інструкція після реалізації, опис функціоналу.»</div>
+      <p>Так було вирішено 4 вересня. Сторінки з покриттям і звітом прогону з Confluence видалені. Покриття, тест-плани і звіти прогонів помічник далі збирає - але кладе <b>файлом</b> і віддає тому QA, який просив.</p>
+      <h3 style="margin-top:14px">Шість розділів інструкції, усі обов'язкові</h3>
+      <ol style="margin:4px 0 0;padding-left:20px;color:var(--ink-2);font-size:14px;line-height:1.5">
+        <li>Як це вмикається - що вибрати і де</li>
+        <li>Що заповнити в адмінці - поле за полем, з типом і обов'язковістю</li>
+        <li>Де це видно - лінк на живу сторінку і прев'ю-тему</li>
+        <li>Що можна змінювати і чим - контентник з адмінки, розробник релізом, ніхто</li>
+        <li>Обробка помилок і порожніх станів</li>
+        <li>Де в темі що лежить</li>
+      </ol>
+      <p style="font-size:13.5px;margin-top:8px">Розділ, який не стосується предмета, не прибирається: «набір іконок в адмінці не налаштовується» - читач мусить це прочитати, а не шукати поля, яких немає.</p>
+    </div>
+    <div class="col">
+      <div class="card ink"><h3>Для кого і звідки</h3><p><b>Читач - контент-команда.</b> Сторінка має бути такою, щоб людина зробила по ній роботу, нікого не питаючи. Другий читач - штучний інтелект, якому сторінку дають як контекст: коротка суть, конкретні назви полів, без води.</p><p><b>Джерело - реалізація</b>: код теми, метаоб'єкти, жива сторінка. Це єдине місце, де у збірку дивитись можна: кейс каже, як <i>має бути</i>, інструкція каже, як <i>є</i>.</p></div>
+      <div class="card" style="margin-top:12px"><h3>Чого на сторінці немає</h3><ul class="tight" style="font-size:13.5px"><li>«Згенеровано скілом», авторства, дати генерації</li><li>переліку джерел, кейсів, задач</li><li>питань і прохань заапрувити - апрув просять у чаті</li><li>вкладень і скріншотів - тільки посилання на ТЗ, задачі, макет</li></ul></div>
+      <div class="card" style="margin-top:12px"><p style="font-size:13.5px;margin:0"><b>Дерево документації повторює поверхні стору</b>, як у документації старої теми: Global chrome, Collection, Search, PDP (сторінка на кожен шаблон), Landings, Cart, Checkout, Account, Design system. Порожніх заготовок не створюємо.</p></div>
+    </div>
+  </div>
+  <div class="src">Публікує лише у наш простір, лише на свої сторінки; чужу не оновлює ніколи; інший вид документа - відмова. <b>Метаоб'єкт</b> - структуровані дані в адмінці Shopify (наприклад, картка бейджа з полями).</div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-n="18">
+  <p class="kicker">Чому це серйозно</p>
+  <h2>Що стоїть за помічником: пам'ять, контекст, прочитане</h2>
+  <div class="grid g3 dense" style="gap:12px">
+    <div class="card ink"><h3>Пам'ять між сесіями</h3><p>Звичайний чат забуває все, щойно закрився. Тут стан проєкту живе у файлах: де ми зупинились, який крок наступний, які рішення ухвалені і чому. Журнал - <b>255 записів</b> за 34 дні, кожен із датою; рішень, оформлених окремим документом із відкинутими альтернативами, - <b>20</b>. Нова сесія починається з читання цього, а не з нуля.</p></div>
+    <div class="card ink"><h3>Великий контекст щоразу</h3><p>Перед кожною відповіддю він тримає в голові правила проєкту - понад <b>7 300 рядків</b> домовленостей: дерево, лейбли, як пишеться кейс, що вважати готовим, коли зупинитись. Плюс знімок усього дерева testomat, реєстр тестових даних і карту адрес магазину. Тому кейс сьогодні виглядає як кейс місяць тому.</p></div>
+    <div class="card ink"><h3>Правила, які не обійти</h3><p>Правила не в пам'яті, а в коді: <b>74 автоматичні перевірки</b> ганяються перед кожним записом. Кейс без обов'язкового лейбла, вигаданий код сьюта, назва товару замість ролі, довге тире - не пройде. Плюс <b>70 тестів</b> на власний код помічника.</p></div>
+  </div>
+  <h3 style="margin-top:14px;font-size:17px">Що було прочитано і звірено, щоб він знав магазин, а не «Shopify взагалі»</h3>
+  <div class="grid g4 dense-stat" style="margin-top:6px">
+    <div class="stat"><div class="big">3 401</div><div class="lbl">товар</div><div class="note">+ 227 колекцій, 67 сторінок - весь каталог через Admin API</div></div>
+    <div class="stat"><div class="big">144</div><div class="lbl">файли шаблонів теми</div><div class="note">код теми звірений із живою темою байт-у-байт</div></div>
+    <div class="stat"><div class="big">66</div><div class="lbl">встановлених апок</div><div class="note">+ 28 кастомних, 13 checkout-розширень - хто що чіпає на вітрині</div></div>
+    <div class="stat"><div class="big">28</div><div class="lbl">маркетів</div><div class="note">з локалями і каталогами - звідси закриті списки лейблів</div></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <div class="col"><p style="font-size:13.5px">Ще: <b>попередні версії скіла</b> (два покоління інструкцій, 600+ рядків) - прочитані, корисне забране, решта свідомо не успадкована; <b>старий проєкт testomat</b> - його структура і кейси розібрані, щоб не повторити дублювання; <b>документація старої теми в Confluence</b> - як зразок структури для нової; <b>ТЗ бізнес-аналітика</b> по кожній поверхні редизайну; <b>макети у Figma</b> - як джерело очікуваного результату; <b>жива вітрина</b> під прев'ю-темою - 797 машинних перевірок в останньому повному прогоні.</p></div>
+    <div class="col"><div class="card ok"><p style="margin:0;font-size:13.5px"><b>Навіщо це QA.</b> Коли ти кажеш «заведи кейси на промокод у кошику», він уже знає, яка апка за це відповідає, на яких шаблонах є кошик, які маркети мають свої правила, який товар підійде для перевірки і в якому сьюті лежать сусідні кейси. Тобі не треба це пояснювати - і не треба перевіряти, чи він не вигадав.</p></div></div>
+  </div>
+  <div class="src">Джерела: інвентар магазину (зріз 4 серпня, 1 270 рядків), журнал проєкту, реєстр рішень, <code>tm lint</code> (74 перевірки), <code>tm test</code> (70 тестів). <b>Admin API</b> - програмний доступ до даних магазину Shopify. Числа на 4 вересня 2026.</div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-n="19">
+  <p class="kicker">У що вклали час</p>
+  <h2>Більшість часу пішла не на код, а на домовленості</h2>
+  <div class="row">
+    <div class="col">
+      <p class="lede">34 дні роботи, і більша частина - про те, як ми взагалі хочемо писати кейси. Це навмисно: структура закладалась під команду і тисячу кейсів, а не під сьогоднішні 153.</p>
+      <ul class="tight" style="font-size:15px">
+        <li><b>Дерево з 16 доменів</b> - обійшли всі типи сторінок магазину і домовились, що є доменом, а що лейблом. Це рішення потім не змінювалось.</li><li><b>13 лейблів із закритими списками</b> - зібрали всі маркети, апки, шаблони; вирішили, що обов'язкове, а що ні. Один раз довелось переглянути: лейбл «де на сторінці» не має сенсу для доменів без інтерфейсу.</li><li><b>Що таке готовий кейс</b> - чекліст, проти якого помічник перевіряє кожен кейс до запису.</li><li><b>Звідки брати очікуваний результат</b> - і чому не з сайту і не з коментаря розробника.</li><li><b>Еталон для вимірювання</b> - 104 приклади «правильна відповідь ось ця», перевірені Оленою вручну.</li><li><b>Переклад усіх кейсів англійською</b> з перевіркою, що жоден крок і жодна цифра не загубились.</li><li><b>70 тестів на власний код</b> помічника - рушій селекторів, дії кошика, радіус зачеплення. З 4 вересня: перший же запуск знайшов дірку у власному фіксі.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Що маємо за це</h3>
+      <div class="grid" style="grid-template-columns:1fr;gap:10px">
+        <div class="card ok"><b>Кейс, написаний сьогодні, не відрізняється від написаного місяць тому.</b> Нікому не треба пам'ятати правила - помічник не дасть їх обійти.</div>
+        <div class="card ok"><b>Нову людину можна підключити за день.</b> Правила записані, а не в голові в однієї людини.</div>
+        <div class="card ok"><b>Помічника можна міряти.</b> Після кожної зміни видно, чи не став він гіршим.</div>
+        <div class="card ok"><b>Половина перевірок робиться за хвилини.</b> І чесно видно, яка половина - ні.</div>
+        <div class="card ok"><b>Кожне рішення має дату і причину.</b> Журнал із 255 записів: чому так, а не інакше.</div>
+      </div>
+    </div>
+  </div>
+  <div class="src">Розроблено з 2 серпня по 4 вересня 2026</div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-n="20">
+  <p class="kicker">Як народжувались правила</p>
+  <h2>Кожне правило - з реального випадку</h2>
+  <div class="grid g4 stories" style="gap:12px">
+    <div class="card"><h3>Бекап, що рахував, а не читав</h3><p>Перед видаленням старого дерева зробили копію. У копію лягли 14 повідомлень про помилку замість 14 кейсів - а скрипт сказав «успіх, 14 записів». Помітили лише очима. <b>Тепер:</b> копія перевіряється за вмістом, і видалення без перевіреної копії не запускається.</p></div>
+    <div class="card"><h3>Точність, що брехала</h3><p>Перша перевірка точності давала високий бал, бо в набір входили лише легкі приклади (адреси сторінок). Складні (ціни, мови, апки) мали по одному прикладу. <b>Тепер:</b> точність показується окремо по кожному типу входу, і «не міряно» пишеться словами.</p></div>
+    <div class="card"><h3>Лейбл, якому нема що ставити</h3><p>20 кейсів про доступність сайту і API не мали чим заповнити лейбл «де на сторінці» - там немає сторінки. <b>Тепер:</b> лейбл обов'язковий лише для доменів з інтерфейсом. Це єдиний раз, коли затверджені правила переглядали.</p></div>
+    <div class="card"><h3>База показує одне, сайт - інше</h3><p>Висновок «товару з неповною матрицею колір × розмір у магазині немає» був правильним про базу і хибним про сайт: тема склеює шість окремих товарів у перемикач кольорів. <b>Тепер:</b> «такого предмета немає» доводиться на живому сайті, не в адмінці.</p></div>
+    <div class="card"><h3>94 фальшивих падіння</h3><p>Перший великий прогін дав 94 «не зійшлось», і жодне не про магазин - сайт почав відбивати запити (помилка 429, «занадто часто»). <b>Тепер:</b> 429 ніколи не рахується падінням; шість підряд зупиняють прогін і позначають звіт недійсним.</p></div>
+    <div class="card"><h3>Очікування пише постановник, не апка</h3><p>Склад набору товарів у Shopify порожній - набором керує стороння апка. Прочитати склад з апки означало б, що очікування кейса пише апка. <b>Тепер:</b> такі кейси стоять як невиконувані до рішення людини. Краще порожньо, ніж зелено проти апки.</p></div>
+    <div class="card"><h3>85 кроків «нема селектора», які були не про селектор</h3><p>155 кроків стояли як «нема за що зачепитись». Перечитали поіменно: 85 з них - дії («закрий дровер», «перемкни маркет»), а раннер сторінки не клікає. Жоден атрибут від розробників їх не зняв би. <b>Тепер:</b> спершу питання «крок читає чи робить?»; оцінки «55% / 90%» зняті.</p></div>
+    <div class="card"><h3>Покриття в Confluence нікому не потрібне</h3><p>Дві сторінки - зріз покриття і звіт прогону - були технічно правильні і нікому не потрібні: для цього є testomat. Потрібною виявилась сторінка «як працюють іконки», якої в переліку видів не було. <b>Тепер:</b> у Confluence їде лише інструкція по функціоналу.</p></div>
+  </div>
+  <div class="src">Усі випадки записані в журналі проєкту з датою; кожен став або правилом, або перевіркою в коді. <b>Бекап</b> - резервна копія. <b>429</b> - відповідь сервера «занадто багато запитів, зачекай».</div>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-n="21">
+  <p class="kicker">Чим це краще</p>
+  <h2>Ніж просто попросити чат написати тест-кейси</h2>
+  <table>
+    <thead><tr><th></th><th>Звичайний чат-помічник</th><th>Shopify Testomat Agent</th></tr></thead>
+    <tbody>
+      <tr><td>Куди класти кейс</td><td>Пропонує «логічну» структуру щоразу трохи іншу</td><td>Одне дерево з 16 доменів; нових папок не створює; каже, наскільки впевнений</td></tr>
+      <tr><td>Як виглядає кейс</td><td>Як вийде: сьогодні так, завтра інакше</td><td>Один шаблон назви, обов'язкові частини, 13 лейблів із закритих списків; перевіряється до запису</td></tr>
+      <tr><td>Звідки очікуваний результат</td><td>Часто - з того, як зараз працює сайт, або з голови</td><td>Тільки з вимоги; якщо її немає - питає постановника</td></tr>
+      <tr><td>Тестові дані</td><td>Вигадає правдоподібну назву товару</td><td>Фікстура за роллю з реєстру; нового не вигадує і не заводить</td></tr>
+      <tr><td>Коли не знає</td><td>Відповідає впевнено</td><td>Каже «не знаю» з кандидатами; впевненість - окреме число</td></tr>
+      <tr><td>Після написання</td><td>Нічого</td><td>Прогін, звіт приймання трьома файлами, два прогони регресії в testomat, інструкція по функціоналу - на тих самих кейсах</td></tr>
+      <tr><td>Пам'ять</td><td>Нова розмова - з нуля</td><td>Пам'ятає стан проєкту і всі рішення між сесіями</td></tr>
+      <tr><td>Чи можна перевірити</td><td>Тільки прочитати</td><td>Є еталон, є числа точності, є журнал з причинами, є 70 тестів на власний код</td></tr>
+      <tr><td>Що може зламати</td><td>Що завгодно, якщо дати доступ</td><td>Не створює доменів і лейблів, не оформлює замовлень, не ставить «готово»; видалення - лише з перевіреним бекапом</td></tr>
+    </tbody>
+  </table>
+  <div class="src">Попередня версія помічника (qa-test-planner) була саме «звичайним чатом з інструкцією»; її прочитали, взяли корисні формулювання і не стали розвивати</div>
+</section>
+
+<!-- 22 -->
+<section class="slide" data-n="22">
+  <p class="kicker">Що треба знати, а що - ні</p>
+  <h2>Напам'ять - п'ять речей. Решту помічник знає за тебе</h2>
+  <div class="row">
+    <div class="col">
+      <div class="card ink"><h3>Треба знати і пам'ятати</h3>
+        <ol style="margin:6px 0 0;padding-left:20px;color:#f4eddc;font-size:15px;line-height:1.5">
+          <li><b>Очікуваний результат - з вимоги, не з сайту.</b> Макет → задача/PRD → слово QA. Коментар розробника - не джерело.</li>
+          <li><b>Назву товару в кейс не вписувати.</b> Тільки роль фікстури в дужках. Немає підхожого товару - питання до Олени.</li>
+          <li><b>Три результати прогону і що з ними робити.</b> Зійшлось - ок. Не зійшлось - спершу вимога, потім перевірка, потім дефект. Не перевіряв - читай причину, вона каже кому і що принести.</li>
+          <li><b>Кому довіряти сліпо, кому ні.</b> Адреса сторінки - довіряй. Задача з Jira - глянь очима, дивись на назву задачі: загальна назва («Initial setup») - назви домен сам. Вільний текст - назви домен сам.</li>
+          <li><b>Що він не зробить, і хто це робить.</b> Новий сьют, нове значення лейбла чи тега, новий товар у магазині, підпис «готово» - Олена. Теги він ставить сам як пропозицію; @automated - лише автоматизатор. Баг, коментар у Jira - публікуєш ти з його чернетки. Він тільки пропонує.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card ok"><h3>Не треба вчити - він робить сам</h3>
+        <ul class="tight" style="font-size:15px">
+          <li><b>13 лейблів і їхні значення.</b> Він ставить, ти дивишся, чи схоже на правду. Список під рукою - на слайді 5.</li>
+          <li><b>Запити тест-планів.</b> Smoke, Full regression, Market - уже заведені; досить знати, що вони є.</li>
+          <li><b>Назви 16 доменів і 129 сьютів.</b> Він резолвить. Досить розуміти, що «сторінка товару» і «кошик» - різні домени.</li>
+          <li><b>Формат ID і назви.</b> Він генерує і перевіряє.</li>
+          <li><b>Команди і скрипти.</b> Ти говориш словами в чаті.</li>
+          <li><b>Machine checks і селектори.</b> Він розмічає сам; тобі досить розуміти «крок 1 і 4 - машина, крок 2-3 - людина».</li>
+          <li><b>Правила публікації в Confluence.</b> Він відмовиться сам, якщо не можна.</li>
+          <li><b>Як збирається регресія.</b> Шари, радіус, два прогони - він робить сам; тобі досить перелічити задачі релізу.</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top:12px"><h3>Корисно розуміти, але не вчити</h3><p style="font-size:14px">Що таке домен і сьют (папка і підпапка), лейбл (ярлик-фільтр), фікстура (роль тестового товару), резолвер (хто вирішує, куди йде кейс), confidence і abstain (число впевненості і «утримався»), прогін (виконання), регресія (перевірка старого після змін), радіус зачеплення (що могло зламатись разом). Усі ці слова пояснені там, де вжиті; окремо вчити не треба.</p></div>
+    </div>
+  </div>
+  <div class="src">Якщо коротко: пам'ятати треба правила поведінки, а не довідники. Довідники - у помічника.</div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-n="23">
+  <p class="kicker">Що є сьогодні</p>
+  <h2>Стан на 4 вересня 2026 - і чесні межі</h2>
+  <div class="grid g4">
+    <div class="stat"><div class="big">153</div><div class="lbl">кейсів у testomat.io</div><div class="note">у 15 доменах із 16</div></div>
+    <div class="stat"><div class="big">100%</div><div class="lbl">кейсів з machine checks</div><div class="note">кожен має блок «що перевіряє машина»</div></div>
+    <div class="stat"><div class="big">239</div><div class="lbl">перевірок зійшлось</div><div class="note">в останньому повному прогоні з 797</div></div>
+    <div class="stat"><div class="big">70</div><div class="lbl">тестів на власний код</div><div class="note">рушій селекторів, кошик, радіус</div></div>
+  </div>
+  <div class="row" style="margin-top:26px">
+    <div class="col">
+      <h3>Де кейсів найбільше</h3>
+      <p class="mono" style="font-size:13px;line-height:1.7">Компоненти дизайн-системи - 46 · Сторінка товару - 25 · Кошик - 20 · Оформлення замовлення - 16 · Каталог - 10 · Головна - 6 · Маркети і мови - 6 · решта - по 2-5</p>
+      <p>Домен «Експерименти» порожній навмисно: місце є, предмета поки немає.</p>
+    </div>
+    <div class="col">
+      <div class="card warn"><h3>Чесні межі сьогодні</h3><ul class="tight"><li>Задачі з Jira із загальною назвою і вільний текст резолвер розкладає посередньо - дивись очима.</li><li>25 кейсів про сторінку товару чекають: редизайн PDP ще не починався.</li><li>85 кроків машина не виконає, доки в нас немає шару браузера, який клікає; 70 кроків чекають на пошук селектора драбиною.</li><li>Регресія не доводить, що нова тема не зламала стару: покриття старої теми в іншому проєкті.</li><li>Деякі числа в його власних документах відстають - якщо важливо, перепитай, він перерахує.</li></ul></div>
+    </div>
+  </div>
+  <div class="src">Детальний технічний розбір слабких місць - файл 01-red-team-audit.md у цій папці</div>
+</section>
+
+<!-- 24 -->
+<section class="slide" data-n="24">
+  <p class="kicker">Як почати</p>
+  <h2>Три кроки і одне прохання</h2>
+  <ol class="steps" style="grid-template-columns:repeat(3,1fr)">
+    <li><b>Прочитай гайд</b>Файл 04-tester-guide.md: що казати, що він зробить, що робиш ти, і словник. 10 хвилин.</li>
+    <li><b>Спробуй на своїй задачі</b>«Заведи кейси на BMS-XXXX». Подивись, у який домен поклав, як назвав, які лейбли поставив. Скажи «пиши» - або «це не туди».</li>
+    <li><b>Прогони</b>«Прогони кейси по BMS-XXXX». Подивись три списки. Пройди руками те, що позначено для людини.</li>
+  </ol>
+  <div class="card ink" style="margin-top:28px;padding:24px 28px">
+    <h3 style="font-size:24px">Якщо він помилився або чогось не вміє - напиши Олені</h3>
+    <p style="font-size:16px">Що ти просила, що він відповів, чого очікувала. Кожен такий випадок стає або правкою, або новим правилом - і більше не повторюється. Саме так з'явились усі правила зі слайда 20. Пропозиції нових сценаріїв - теж туди.</p>
+  </div>
+  <div class="quote" style="margin-top:24px">Він робить те, що ми домовились. Наступна робота - навчити його того, про що ми ще не домовились.</div>
+  <div class="src">Папка з матеріалами: 01 - технічний аудит · 02 - пояснення для не-QA · 03 - ця презентація · 04 - гайд для колег</div>
+</section>
+
+</main>
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide')),nav=document.getElementById('nav'),deck=document.getElementById('deck');
+  slides.forEach(function(s,i){var a=document.createElement('a');a.href='#';a.title=(i+1);a.addEventListener('click',function(e){e.preventDefault();s.scrollIntoView({behavior:'smooth'})});nav.appendChild(a)});
+  var dots=nav.children;
+  function cur(){var t=deck.scrollTop,h=deck.clientHeight;return Math.round(t/h)}
+  function mark(){var c=cur();for(var i=0;i<dots.length;i++)dots[i].className=i===c?'on':''}
+  deck.addEventListener('scroll',mark);mark();
+  document.addEventListener('keydown',function(e){
+    var c=cur(),n=null;
+    if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' '||e.key==='ArrowRight')n=Math.min(c+1,slides.length-1);
+    if(e.key==='ArrowUp'||e.key==='PageUp'||e.key==='ArrowLeft')n=Math.max(c-1,0);
+    if(e.key==='Home')n=0;if(e.key==='End')n=slides.length-1;
+    if(n!==null){e.preventDefault();slides[n].scrollIntoView({behavior:'smooth'})}
+  });
+})();
+</script>
+</body>
+</html>
