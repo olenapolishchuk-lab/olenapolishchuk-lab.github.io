@@ -1,0 +1,790 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>Testomat QA kit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  /* дизайн-система редизайну BetterMe Store (з деку колеги) */
+  --cream:#fffcf5; --cream2:#f4efe8; --line:#e8e3da;
+  --dark:#332726; --dark2:#261c1b;
+  --mocha:#75675b; --mocha2:#c9b8a6; --muted:#706764; --dim:#a8a29e; --ondark:#d6d2cc;
+  --ok:#3f7a55; --fail:#a8453a;
+  --sans:'Inter Tight',Arial,sans-serif; --mono:'JetBrains Mono','Courier New',monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--cream2);color:var(--dark);font-family:var(--sans);font-size:16px;line-height:1.35;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+button:focus-visible{outline:2px solid var(--mocha);outline-offset:3px;border-radius:8px}
+b{font-weight:600}
+code{font-family:var(--mono);font-size:.92em}
+
+#viewport{position:fixed;inset:0;display:grid;place-items:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+#stage{width:1280px;height:720px;position:relative;transform-origin:center center;flex:none;background:var(--cream);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(51,39,38,.18)}
+.slide{position:absolute;inset:0;padding:64px 84px 84px;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .4s ease,transform .4s ease,visibility 0s .4s;display:grid;grid-template-rows:auto 1fr;gap:24px;background:var(--cream)}
+.slide.alt{background:var(--cream2)}
+.slide.darker{background:var(--dark2);color:var(--cream)}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .4s ease,transform .4s ease}
+.eyebrow{font-size:13px;font-weight:500;letter-spacing:.25em;text-transform:uppercase;color:var(--mocha);margin:0 0 10px}
+.darker .eyebrow{color:var(--mocha2)}
+h1,h2{font-weight:500;margin:0;letter-spacing:-.02em;line-height:1.08;text-wrap:balance}
+h1{font-size:88px;letter-spacing:-.035em}
+h2{font-size:44px}
+.sub{font-size:22px;color:var(--muted);margin:14px 0 0;max-width:60ch;line-height:1.3}
+.darker .sub{color:var(--ondark)}
+.head{display:flex;justify-content:space-between;align-items:end;gap:32px}
+.head .aside{font-family:var(--mono);font-size:13px;color:var(--dim);white-space:nowrap}
+.body{min-height:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%}
+.cols.w2{grid-template-columns:5fr 7fr}.cols.w3{grid-template-columns:7fr 5fr}
+.foot{position:absolute;left:84px;right:84px;bottom:32px;font-size:14px;color:var(--dim);display:flex;justify-content:space-between;gap:24px}
+.step{opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s}
+.step.on{opacity:1;transform:none}
+
+#bar{position:fixed;left:0;right:0;bottom:0;height:3px;background:var(--line)}
+#bar i{display:block;height:100%;background:var(--dark);width:0;transition:width .4s ease}
+#hud{position:fixed;right:16px;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--dim);z-index:5}
+#hud button{padding:6px 10px;border:1px solid var(--line);border-radius:8px;color:var(--muted);background:var(--cream)}
+#hint{position:fixed;left:16px;bottom:calc(12px + env(safe-area-inset-bottom,0px));font-family:var(--mono);font-size:12px;color:var(--dim);z-index:5}
+#notes{position:fixed;left:16px;right:16px;bottom:44px;max-width:780px;margin:0 auto;background:var(--dark);border-radius:16px;padding:16px 20px;font-size:16px;line-height:1.4;color:var(--cream);box-shadow:0 20px 60px rgba(38,28,27,.4);z-index:6}
+#notes .t{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mocha2);margin-bottom:6px}
+
+.card{background:var(--cream2);border-radius:20px;padding:24px 26px;display:grid;gap:8px;align-content:start}
+.alt .card{background:var(--cream)}
+.card.dk,.alt .card.dk{background:var(--dark);color:var(--cream)}
+.card.dk p{color:var(--ondark)}
+.card .rule{width:40px;height:5px;border-radius:3px;background:var(--mocha);margin-bottom:6px}
+.card h3{margin:0;font-size:23px;font-weight:500;line-height:1.2;letter-spacing:-.01em}
+.card p{margin:0;font-size:16.5px;color:var(--muted);line-height:1.35}
+.card .l{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--mocha);font-weight:500}
+.card.dk .l{color:var(--mocha2)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.big{font-size:60px;font-weight:500;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:18px;color:var(--mocha2);letter-spacing:0;font-weight:400}
+.tag{font-family:var(--mono);font-size:12.5px;padding:5px 10px;border-radius:999px;background:rgba(117,103,91,.12);color:var(--dark)}
+.chip{display:inline-flex;align-items:center;font-family:var(--mono);font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--cream)}
+.chip.on{background:var(--dark);border-color:var(--dark);color:var(--cream)}
+.ok{color:var(--ok)}.fail{color:var(--fail)}
+ul.clean{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+ul.clean li{padding-left:32px;position:relative;font-size:16.5px;color:var(--muted);line-height:1.35}
+ul.clean li::before{content:"✓";position:absolute;left:0;top:0;color:var(--mocha);font-weight:600}
+ul.clean li b{color:var(--dark)}
+table.t{width:100%;border-collapse:collapse;font-size:15.5px}
+table.t th{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);text-align:left;padding:0 12px 10px;border-bottom:2px solid var(--line);font-weight:500}
+table.t td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+table.t td:first-child{color:var(--dark);font-weight:500}
+table.t td.m{font-family:var(--mono);font-size:13.5px;color:var(--dark);font-weight:400}
+.quote{font-size:25px;line-height:1.25;font-weight:500;letter-spacing:-.01em;max-width:26ch;margin:0}
+.pill{font-family:var(--mono);font-size:14px;padding:8px 14px;border-radius:999px;background:var(--cream);border:1px solid var(--line)}
+.pill b{color:var(--dark)}
+
+.cover{display:grid;grid-template-rows:1fr auto;gap:30px;padding:72px 84px 64px}
+.cover h1{max-width:12ch}
+.cover .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.cover .kpi div{background:rgba(255,252,245,.06);border:1px solid rgba(255,252,245,.14);border-radius:18px;padding:18px 20px}
+.cover .kpi .big{font-size:52px;color:var(--cream)}
+.cover .kpi p{margin:8px 0 0;font-size:14px;color:var(--mocha2)}
+
+.layers{display:grid;gap:8px;align-content:center}
+.ly{display:grid;grid-template-columns:110px 1fr;gap:2px 16px;align-items:center;padding:13px 20px;border-radius:16px;background:var(--cream2);transition:all .25s}
+.ly .k{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--mocha);grid-row:span 2}
+.ly b{font-size:17px;font-weight:500}
+.ly .d{font-size:14.5px;color:var(--muted);display:none}
+.ly.on{background:var(--dark);color:var(--cream)}
+.ly.on .d{display:block;color:var(--ondark)}.ly.on .k{color:var(--mocha2)}
+
+.abil{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:14px;height:100%}
+.ab{background:var(--cream);border-radius:18px;padding:20px 22px;display:grid;align-content:start;gap:6px;transition:transform .2s,background .2s}
+.ab:hover{transform:translateY(-3px)}
+.ab .n{font-family:var(--mono);font-size:12px;color:var(--mocha)}
+.ab h3{margin:0;font-size:19px;font-weight:500;line-height:1.2}
+.ab p{margin:0;font-size:15px;color:var(--muted)}
+.ab .more{display:none;font-size:15px;color:var(--ondark)}
+.ab.open{background:var(--dark);color:var(--cream)}
+.ab.open .more{display:block}.ab.open p{display:none}.ab.open .n{color:var(--mocha2)}
+
+.mult{display:flex;align-items:center;gap:18px;font-weight:500;font-size:40px;letter-spacing:-.03em;flex-wrap:wrap}
+.mult .f{display:grid;text-align:center}.mult .f small{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--mocha);font-weight:500}
+.mult .op{color:var(--mocha2);font-size:30px}.mult .res{font-size:72px;color:var(--fail)}
+
+.domains{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-content:start}
+.dom{padding:9px 12px;border-radius:12px;background:var(--cream);font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:baseline;min-height:40px}
+.dom i{font-family:var(--mono);font-size:11px;color:var(--dim);font-style:normal}
+.dom.z{background:var(--dark);color:var(--cream)}.dom.z i{color:var(--mocha2)}
+
+.dbars{display:grid;gap:7px;align-content:start}
+.db{display:grid;grid-template-columns:230px 1fr 44px;gap:12px;align-items:center;font-size:14px;color:var(--muted)}
+.db .tr{height:14px;background:var(--cream2);border-radius:7px;overflow:hidden}
+.db .tr i{display:block;height:100%;width:0;background:var(--mocha2);transition:width 1s ease}
+.db.top .tr i{background:var(--dark)}
+.db .v{text-align:right;color:var(--dark);font-weight:500;font-variant-numeric:tabular-nums}
+
+.tree{font-family:var(--mono);font-size:13.5px;line-height:1.7;padding:16px 20px;border-radius:16px;background:var(--cream);white-space:pre}
+.tree .x{color:var(--fail)}.tree .g{color:var(--ok)}
+.ptable{font-family:var(--mono);font-size:13px;width:100%;border-collapse:collapse}
+.ptable td,.ptable th{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left}
+.ptable th{color:var(--dim);font-weight:500;font-size:11px;letter-spacing:.15em}
+.ptable tr{cursor:pointer}.ptable tr.on td{background:rgba(117,103,91,.14)}
+.ptable td.h{color:var(--mocha)}
+
+.casecard{font-family:var(--mono);font-size:12.4px;line-height:1.5;background:var(--cream2);border-radius:18px;padding:18px 20px;height:100%;overflow:hidden}
+.casecard .part{padding:3px 8px;margin:0 -8px;border-radius:8px;transition:background .25s;white-space:pre-wrap}
+.casecard .part.hl{background:rgba(117,103,91,.18)}
+.casecard .dim{color:var(--dim)}.casecard .key{color:var(--mocha);font-weight:500}
+.anno{display:grid;gap:8px;align-content:start}
+.an{padding:11px 16px;border-radius:14px;background:var(--cream2);display:grid;gap:2px;transition:background .2s}
+.an:hover,.an.on{background:var(--dark);color:var(--cream)}
+.an h4{margin:0;font-size:15.5px;font-weight:500}.an p{margin:0;font-size:13.5px;color:var(--muted)}
+.an.on p,.an:hover p{color:var(--ondark)}
+
+.steps{display:grid;gap:14px;align-content:start}
+.st{display:grid;grid-template-columns:52px 1fr;gap:16px;align-items:center}
+.st .n{width:52px;height:52px;border-radius:50%;background:var(--dark);color:var(--cream);display:grid;place-items:center;font-size:22px;font-weight:500}
+.st.no .n{background:var(--fail)}
+.st h4{margin:0;font-size:21px;font-weight:500}.st p{margin:2px 0 0;font-size:15.5px;color:var(--muted)}
+
+.chatwrap{display:grid;grid-template-columns:7fr 5fr;grid-template-rows:minmax(0,1fr);gap:24px;height:100%;min-height:0}
+.chatwrap>*{min-width:0;min-height:0}
+.chat{background:var(--cream);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;overflow:hidden;max-height:100%}
+.chat .hdr{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.1em;display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.msgs{display:flex;flex-direction:column;gap:10px;overflow:hidden;justify-content:flex-end;flex:1}
+.msg{max-width:88%;padding:12px 16px;border-radius:18px;font-size:15px;line-height:1.38;animation:pop .35s ease}
+.msg.me{align-self:flex-end;background:var(--dark);color:var(--cream);border-bottom-right-radius:6px;font-weight:500}
+.msg.ag{align-self:flex-start;background:var(--cream2);border-bottom-left-radius:6px}
+.msg.ag .who{font-family:var(--mono);font-size:11px;color:var(--mocha);letter-spacing:.15em;margin-bottom:4px}
+.msg .mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.msg .three{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.works{display:grid;gap:7px;align-content:start}
+.wk{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:12px;background:var(--cream);font-size:15px;color:var(--dim);transition:all .3s}
+.wk .n{font-family:var(--mono);font-size:12px}
+.wk.done{color:var(--dark)}
+.wk.on{background:var(--dark);color:var(--cream)}.wk.on .n{color:var(--mocha2)}
+.wknote{margin-top:8px;padding:12px 14px;border-radius:12px;background:var(--cream);font-size:14px;color:var(--muted);min-height:48px}
+
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.flow span{padding:8px 14px;border-radius:999px;background:var(--cream2)}
+.flow .a{color:var(--mocha2);background:none;padding:0}
+.flow .g{background:var(--dark);color:var(--cream)}
+
+.probes{display:grid;gap:6px}
+.probes div{display:grid;grid-template-columns:100px 1fr;gap:12px;padding:9px 14px;border-radius:12px;background:var(--cream2);font-size:14.5px;color:var(--muted)}
+.probes code{color:var(--dark)}
+.crit{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.crit div{padding:8px 12px;border-radius:12px;background:var(--cream);font-size:13.5px;display:flex;justify-content:space-between;gap:8px}
+.crit code{color:var(--mocha)}
+
+.radius svg{width:100%;height:100%}
+.radius text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+
+.rakes{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,1fr);gap:10px;height:100%}
+.rk{padding:14px 16px;border-radius:16px;background:var(--cream2);display:grid;gap:4px;align-content:start;transition:all .2s}
+.rk .n{font-family:var(--mono);font-size:12px;color:var(--mocha)}
+.rk h4{margin:0;font-size:15px;font-weight:500;line-height:1.25}
+.rk .d{display:none;font-size:14px;line-height:1.35;color:var(--ondark)}
+.rk .d b{display:block;color:var(--mocha2);margin-top:6px;font-weight:500}
+.rk.on{grid-column:span 2;grid-row:span 2;background:var(--dark);color:var(--cream)}
+.rk.on .d{display:block}.rk.on .n{color:var(--mocha2)}
+.rk:hover{background:var(--line)}.rk.on:hover{background:var(--dark)}
+
+.phrases{display:grid;gap:10px;align-content:start}
+.phrase{padding:13px 18px;border-radius:14px;background:var(--dark);color:var(--cream);font-size:16.5px;font-weight:500;line-height:1.3}
+.phrase small{display:block;font-weight:400;font-size:13.5px;color:var(--ondark);margin-top:4px}
+
+.end{display:grid;place-items:center;text-align:center}
+.end h1{font-size:120px}
+.end p{font-size:24px;color:var(--ondark);margin:18px 0 0}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+
+<div id="viewport">
+<div id="stage">
+
+<!-- 1 COVER -->
+<section class="slide darker cover" data-notes="Відкриваю одним реченням: я більше не «чатюсь з AI» про тест-кейси. Даю тікет - kit доводить його до звіту. Це не скіл, це набір інструментів: скрипти, пам’ять, хуки, і вже потім промпт. Числа - зі знімка на 24 вересня.">
+  <div>
+    <p class="eyebrow">BetterMe Store · команда QA · демо</p>
+    <h1>Testomat QA kit</h1>
+    <p class="sub" style="max-width:54ch;font-size:26px">Один тікет - від Jira до звіту. Kit пише кейси, проганяє їх проти store і збирає регресію. Людина вирішує.</p>
+  </div>
+  <div class="kpi">
+    <div><div class="big" data-count="413">0</div><p>кейсів у testomat</p></div>
+    <div><div class="big" data-count="1190">0</div><p>перевірок за один прогін</p></div>
+    <div><div class="big" data-count="317">0</div><p>комітів за 7,5 тижнів</p></div>
+    <div><div class="big" data-count="0">0</div><p>постів у Jira без людини</p></div>
+  </div>
+  <div class="foot"><span>bttrm-qa-lab/shopify-testomat-agent · v2.0.0</span><span style="font-family:var(--mono)">← → · N нотатки · F екран</span></div>
+</section>
+
+<!-- 2 KIT NOT SKILL -->
+<section class="slide" data-notes="Три хвилини на це, бо якщо після виступу хтось скаже «а, це такий скіл» - я не донесла. Скіл - один текстовий файл, живе доти, доки живий чат. Kit - оточення. Клікаю по шарах знизу вгору. Промпт - зверху, тонкий шар поверх Python. «Поставити скіл» не вийде, нема пакета. Клонуєш репо і працюєш у теці.">
+  <div class="head"><div><p class="eyebrow">Головне</p><h2>Це kit, а не скіл</h2></div><div class="aside">клікни на шар</div></div>
+  <div class="body cols w2">
+    <div class="layers" id="layers">
+      <button class="ly"><span class="k">Промпт</span><b>SKILL.md · 1559 рядків</b><span class="d">Інструкція для агента. Тонкий шар зверху, не фундамент.</span></button>
+      <button class="ly"><span class="k">Правила</span><b>14 570 рядків</b><span class="d">Проти чого все перевіряється. Lint ганяє їх на кожен коміт.</span></button>
+      <button class="ly"><span class="k">Хуки</span><b>2 хуки · 3 події</b><span class="d">На старті читають, що недороблено. На «готово» не дають зупинитись раніше часу.</span></button>
+      <button class="ly"><span class="k">Пам’ять</span><b>тека .state/</b><span class="d">Де ми, що зроблено, що лишилось. Переживає кінець сесії.</span></button>
+      <button class="ly"><span class="k">Ядро</span><b>sdk/core/</b><span class="d">Резолвер, клієнт testomat, рушій селекторів. Python, не абзац тексту.</span></button>
+      <button class="ly"><span class="k">Скрипти</span><b>38 · 19 120 рядків</b><span class="d">Роблять роботу руками агента. Один вхід - один вихід, завжди.</span></button>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="grid2">
+        <div class="card step"><div class="rule"></div><h3>Скіл - це текст</h3><p>Один файл: роби так, не роби отак. Нічого не пам’ятає. Живе, доки живий чат.</p></div>
+        <div class="card dk step"><div class="rule" style="background:var(--mocha2)"></div><h3>Kit - це оточення</h3><p>Скрипти, пам’ять, хуки, правила. І вже потім промпт.</p></div>
+      </div>
+      <div class="card step"><h3>Що це дає</h3><ul class="clean"><li><b>Однаковий результат.</b> Один вхід - один вихід, як би агент себе не почував.</li><li><b>Правило перевіряється, а не згадується.</b> Текст агента не спиняє. Спиняє скрипт.</li><li><b>Спільне оточення.</b> Свій скіл кладеш поруч - і користуєшся рештою.</li></ul></div>
+      <p class="step" style="margin:0;font-size:15.5px;color:var(--muted)">«Поставити скіл» не вийде - тут нема пакета. Клонуєш репо і працюєш у теці. Тека і є продукт.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>02</span></div>
+</section>
+
+<!-- 3 ABILITIES -->
+<section class="slide alt" data-notes="Вісім робіт. Клікаю на плитку - там те, що відчувається щодня. Далі покажу всі вісім на одній живій задачі.">
+  <div class="head"><div><p class="eyebrow">Що вміє</p><h2>Вісім робіт, одна команда: tm</h2></div><div class="aside">клікни на плитку</div></div>
+  <div class="body abil">
+    <button class="ab"><span class="n">01</span><h3>Пише кейси у дерево</h3><p>Тікет або URL - у домен і сьют.</p><div class="more">Не треба тримати 130 сьютів у голові. Кажеш «заведи кейси на BMS-XXXX» - воно знає, куди.</div></button>
+    <button class="ab"><span class="n">02</span><h3>Проганяє проти store</h3><p>Зійшлось · не зійшлось · не перевіряв.</p><div class="more">Три результати ніколи не зливаються в одне число. «Не перевіряв» завжди каже чому.</div></button>
+    <button class="ab"><span class="n">03</span><h3>Збирає регресію</h3><p>Перелік задач - два прогони в testomat.</p><div class="more">Радіус по лейблах. І окремо: задачі, під які кейсів нема взагалі.</div></button>
+    <button class="ab"><span class="n">04</span><h3>Готує три звіти</h3><p>Story bug · коментар · звіт прогону.</p><div class="more">Нічого не постить. Числа, не прикметники. Публікуєш ти.</div></button>
+    <button class="ab"><span class="n">05</span><h3>Пише howto в Confluence</h3><p>Як працює, що заповнити, де видно.</p><div class="more">Один вид документа. Покриття і звіти туди не їдуть - для них є testomat.</div></button>
+    <button class="ab"><span class="n">06</span><h3>Тисне клавіші по-справжньому</h3><p>Tab, фокус, дерево доступності.</p><div class="more">Вбудована панель клавіші не доставляє. Тому - справжній Chromium.</div></button>
+    <button class="ab"><span class="n">07</span><h3>Читає макет як дані</h3><p>Вузли Figma, не картинка.</p><div class="more">Число з вузла важить більше за око. Дірка в макеті - питання до прогону.</div></button>
+    <button class="ab"><span class="n">08</span><h3>Веде леджер і гейт</h3><p>Не каже «готово», поки не готово.</p><div class="more">Хук дивиться в леджер. Є що робити - «готово» не буде.</div></button>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>03</span></div>
+</section>
+
+<!-- 4 PROBLEM -->
+<section class="slide" data-notes="Навіщо це все. Великий store - хочеться все в папки. 45 шаблонів PDP на 27 маркетів на 3 девайси - 3645 папок, у кожній копія тих самих кейсів. Через місяць чотири версії одного кейса. testomat однакові назви не склеює. І числа: 22 з 23 пар розходились, поки їх оновлювали руками.">
+  <div class="head"><div><p class="eyebrow">Як було</p><h2>Чому дерево тестів вибухає</h2></div></div>
+  <div class="body" style="display:grid;gap:26px;align-content:start">
+    <div class="mult"><div class="f"><span data-count="45">0</span><small>шаблонів PDP</small></div><span class="op">×</span><div class="f"><span data-count="27">0</span><small>маркетів</small></div><span class="op">×</span><div class="f"><span data-count="3">0</span><small>девайси</small></div><span class="op">=</span><div class="f"><span class="res" data-count="3645">0</span><small>папок, якщо папка на комбінацію</small></div></div>
+    <div class="grid3">
+      <div class="card step"><div class="rule"></div><h3>Копії розходяться</h3><p>Чотири версії кейса «додати в cart». Фікс в одній не доїжджає в три інші.</p></div>
+      <div class="card step"><div class="rule"></div><h3>testomat не склеює</h3><p>Назва з другої спроби - новий сьют, а не виправлення старого.</p></div>
+      <div class="card step"><div class="rule"></div><h3>Числа брешуть</h3><p>П’ять документів, оновлюєш один. 22 з 23 пар не збігались.</p></div>
+    </div>
+    <p class="quote step" style="max-width:44ch">Поки кейси пише одна людина, цього не видно. Приходить, коли людей троє, а кейсів сотні.</p>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>04</span></div>
+</section>
+
+<!-- 5 TWO AXES -->
+<section class="slide alt" data-notes="Папки відповідають на два питання одразу: де живе поведінка і в яких умовах перевіряємо. Розділили. Дерево - «де». Лейбли - «коли». Прогін - запит по лейблах, не копія папок. Чому 16: у Shopify закритий список типів сторінок, плюс checkout, акаунти, доступність роутів і компоненти. Kit сьютів не створює - інакше за тиждень друге дерево.">
+  <div class="head"><div><p class="eyebrow">Рішення</p><h2>Дерево каже «де». Лейбли кажуть «коли»</h2></div><div class="aside">L1 → L2 → L3, глибше не можна</div></div>
+  <div class="body cols w2">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card step"><div class="rule"></div><h3>Дерево - 16 доменів</h3><p>Де живе поведінка. 130 сьютів, три рівні. Створене один раз, kit його не змінює.</p></div>
+      <div class="card dk step"><div class="rule" style="background:var(--mocha2)"></div><h3>Лейбли - 13 вимірів</h3><p>У яких умовах перевіряємо: маркет, девайс, шаблон, апка. 111 значень. Прогін - це запит.</p></div>
+      <p class="step" style="margin:0;font-size:15.5px;color:var(--muted)">Чому рівно 16: у Shopify закритий список типів сторінок. Кожен тип - домен. Будь-який URL потрапляє рівно в один.</p>
+    </div>
+    <div class="domains">
+      <div class="dom z"><i>01</i>Availability</div><div class="dom"><i>02</i>Home, шапка, футер</div><div class="dom"><i>03</i>Catalog</div><div class="dom"><i>04</i>Search</div>
+      <div class="dom"><i>05</i>PDP</div><div class="dom"><i>06</i>Landings</div><div class="dom"><i>07</i>Cart</div><div class="dom z"><i>08</i>Checkout</div>
+      <div class="dom z"><i>09</i>Account</div><div class="dom"><i>10</i>Pricing, promo</div><div class="dom"><i>11</i>Markets, i18n</div><div class="dom"><i>12</i>Apps</div>
+      <div class="dom"><i>13</i>Experiments</div><div class="dom"><i>14</i>API</div><div class="dom"><i>15</i>Non-functional</div><div class="dom z"><i>16</i>Design System</div>
+      <p style="grid-column:1/-1;margin:8px 0 0;font-size:15px;color:var(--muted)">Темні - не типи сторінок Shopify, а окремі сутності. ID кейса: <code>SHOP-PDP-CORE-02</code>.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>05</span></div>
+</section>
+
+<!-- 6 TREE NOW -->
+<section class="slide" data-notes="Стан на сьогодні. 215 у компонентах - редизайн зараз там. @automated нуль - це правда: автотестів на редизайн ще нема. 118 кандидатів - готова черга для автоматизатора. Числа генерує скрипт у STATUS.md, руками їх ніхто не переписує.">
+  <div class="head"><div><p class="eyebrow">Дерево зараз</p><h2>413 кейсів у 15 доменах із 16</h2></div><div class="aside">знімок 24.09.2026</div></div>
+  <div class="body cols w3">
+    <div class="dbars">
+      <div class="db top"><span>16 Design System</span><div class="tr"><i data-w="100"></i></div><span class="v">215</span></div>
+      <div class="db top"><span>06 Landings</span><div class="tr"><i data-w="35.3"></i></div><span class="v">76</span></div>
+      <div class="db"><span>05 PDP</span><div class="tr"><i data-w="11.6"></i></div><span class="v">25</span></div>
+      <div class="db"><span>08 Checkout</span><div class="tr"><i data-w="10.7"></i></div><span class="v">23</span></div>
+      <div class="db"><span>07 Cart</span><div class="tr"><i data-w="9.3"></i></div><span class="v">20</span></div>
+      <div class="db"><span>15 Non-functional</span><div class="tr"><i data-w="7.4"></i></div><span class="v">16</span></div>
+      <div class="db"><span>03 Catalog</span><div class="tr"><i data-w="4.7"></i></div><span class="v">10</span></div>
+      <div class="db"><span>11 Markets</span><div class="tr"><i data-w="3.3"></i></div><span class="v">7</span></div>
+      <div class="db"><span>02 Home</span><div class="tr"><i data-w="2.8"></i></div><span class="v">6</span></div>
+      <div class="db"><span>01 · 04 · 14 · 09 · 10 · 12</span><div class="tr"><i data-w="1.4"></i></div><span class="v">15</span></div>
+      <div class="db"><span>13 Experiments</span><div class="tr"><i data-w="0"></i></div><span class="v">0</span></div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card"><div class="l">Пріоритети</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill">P0 <b>33</b></span><span class="pill">P1 <b>241</b></span><span class="pill">P2 <b>136</b></span><span class="pill">P3 <b>3</b></span></div></div>
+      <div class="card dk"><div class="l">Теги</div><div class="big">118 <small>кандидатів на автоматизацію</small></div><p>@regression 393 · @smoke 23 · @automated 0. Нуль - не пропуск: автотестів на редизайн ще нема. 118 - готова черга для автоматизатора.</p></div>
+      <p style="margin:0;font-size:15px;color:var(--muted)">Ці числа генерує скрипт у STATUS.md. Руками їх ніхто не переписує.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>06</span></div>
+</section>
+
+<!-- 7 TEMPLATE -->
+<section class="slide alt" data-notes="Найчастіше питання: як розкласти тести для різних шаблонів PDP. Не папка на шаблон, а один сценарій і таблиця параметрів. testomat рахує кожен рядок як окремий тест. Новий шаблон - новий рядок, не 40 кейсів. Ціна чесно: падає рядок, не кейс, і межа «це інший сценарій» на око.">
+  <div class="head"><div><p class="eyebrow">Шаблони PDP</p><h2>Шаблон - це рядок у таблиці, а не папка</h2></div><div class="aside">клікни на рядок</div></div>
+  <div class="body cols">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="tree step"><span class="x">Не так</span>
+05_PDP/
+   PDP_supplements/    40 тестів
+   PDP_bundle/         ті самі 40
+   PDP_subscription/   ті самі 40</div>
+      <div class="tree step"><span class="g">Так</span>
+05_PDP/
+   Core_journey/         один сценарій, параметризований
+   Template_specifics/   лише справді унікальне</div>
+      <p class="step" style="margin:0;font-size:15.5px;color:var(--muted)">Новий шаблон - новий рядок і нове значення лейбла. Виправила сценарій раз - виправила для всіх.</p>
+    </div>
+    <div class="card" style="padding:20px 22px">
+      <div class="l">SHOP-PDP-CORE-02 · P0</div>
+      <p style="font-family:var(--mono);font-size:12.5px;color:var(--dark)">Guest selects the required options and adds the product to the cart → the cart line carries the selected variant and the cart count increases by one</p>
+      <table class="ptable" id="ptable">
+        <tr><th>template</th><th>handle</th><th>expected</th></tr>
+        <tr><td class="h">product.default</td><td>{handle_default}</td><td>single ATC</td></tr>
+        <tr><td class="h">product.subscription</td><td>{handle_sub}</td><td>ATC + selling plan</td></tr>
+        <tr><td class="h">product.bundle</td><td>{handle_bundle}</td><td>ATC + bundle summary</td></tr>
+        <tr><td class="h">product.digital</td><td>{handle_digital}</td><td>ATC, no shipping notice</td></tr>
+      </table>
+      <p style="font-size:14px">Ціна чесно: падає рядок, не кейс. І суфікси шаблонів поки порожні - усі 82 видимі зі старої теми.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>07</span></div>
+</section>
+
+<!-- 8 CASE -->
+<section class="slide" data-notes="Реальний кейс. Наводжу на пояснення - підсвічується частина. Назва - одна форма з однією стрілкою. Перший рядок - джерело. Кожен крок з Expected. Жодних назв товарів - тільки роль, реальні хендли в одному файлі. І Machine checks - те, що машина перевірить сама. Перед записом lint: не пройшов - не записався.">
+  <div class="head"><div><p class="eyebrow">Як пишеться кейс</p><h2>Форма закрита. Lint інакше не пропустить</h2></div><div class="aside">наведи на пояснення</div></div>
+  <div class="body cols w3">
+    <div class="casecard" id="casecard">
+<div class="part" data-p="id"><span class="key">[SHOP-PDP-CORE-02]</span> Guest selects the required options and adds the product to the cart → the cart line carries the selected variant and the cart count increases by one</div>
+<div class="part" data-p="src"><span class="dim">Source:</span> BMS-6697 (AC-49, FR-42)</div>
+<div class="part" data-p="pre"><span class="dim">Preconditions</span>
+- {handle_default} is active and published
+- cart is empty</div>
+<div class="part" data-p="steps"><span class="dim">Steps</span>
+1. Open the PDP.                  <span class="ok">Expected:</span> 200, main form present
+2. Select the required options.   <span class="ok">Expected:</span> price reflects the variant
+3. Press add-to-cart.             <span class="ok">Expected:</span> cart line carries the variant
+4. Read the cart count.           <span class="ok">Expected:</span> increased by one</div>
+<div class="part" data-p="lbl"><span class="dim">Labels</span> layer=ui · journey=J1_first_purchase · template=[default, subscription, bundle, digital]</div>
+<div class="part" data-p="mc"><span class="dim">Machine checks</span>
+step 1: route_status → 200
+step 1: dom_visible form[action='/cart/add']
+step 3: cart_line variant_id == selected
+step 2: manual (needs human eyes)</div>
+    </div>
+    <div class="anno" id="anno">
+      <button class="an" data-p="id"><h4>Хто → що робить → що має статись</h4><p>Одна стрілка. «→ works» заборонено.</p></button>
+      <button class="an" data-p="src"><h4>Перший рядок - джерело</h4><p>Ключ задачі й номери вимог.</p></button>
+      <button class="an" data-p="steps"><h4>Кожен крок з Expected</h4><p>Кроків «перевірити, що все ок» нема.</p></button>
+      <button class="an" data-p="pre"><h4>Жодних назв товарів</h4><p>Тільки роль. Реальні хендли - в одному файлі, 37 записів.</p></button>
+      <button class="an" data-p="lbl"><h4>Лейбли із закритих списків</h4><p>13 вимірів, 111 значень. Kit ставить сам.</p></button>
+      <button class="an" data-p="mc"><h4>Machine checks</h4><p>Що машина перевірить сама. Решта - людині.</p></button>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>08</span></div>
+</section>
+
+<!-- 9 TRUTH -->
+<section class="slide alt" data-notes="Найважливіше правило: звідки береться «як має бути». Figma, потім Jira і PRD, потім моє слово. Коментар розробника - не джерело, а сигнал розходження: стає правдою після апруву дизайну або менеджера. Це не гасло - скрипт розбирає тікет і ловить «не заводив», «замість». Приклад BMS-6807. Кейс зі збірки описує збірку і більше не ловить баг.">
+  <div class="head"><div><p class="eyebrow">Джерело істини</p><h2>Очікування - з вимоги, не зі збірки</h2></div><div class="aside">scripts/ticket-truth.py</div></div>
+  <div class="body cols">
+    <div class="steps">
+      <div class="st step"><div class="n">1</div><div><h4>Figma</h4><p>Самі компоненти, не підписи поруч.</p></div></div>
+      <div class="st step"><div class="n">2</div><div><h4>Опис задачі в Jira і PRD</h4><p>FR, AC, ERR.</p></div></div>
+      <div class="st step"><div class="n">3</div><div><h4>Слово QA після приймання</h4><p>Останнє, не перше.</p></div></div>
+      <div class="st no step"><div class="n">✕</div><div><h4>Коментар розробника</h4><p>«Зробили інакше» - сигнал розходження. Правдою стає після апруву дизайну або менеджера.</p></div></div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card dk step"><div class="l">Живий приклад · BMS-6807</div><h3>«Сніпет не заводив»</h3><p>У тікеті: «додати шість іконок і сніпет під них». У коментарі: не заводив. Апруву нема - кейс пишеться проти вимоги.</p></div>
+      <div class="card step"><h3>Чому це найдорожче</h3><p>Кейс, написаний з того, що бачиш на сайті, описує сайт. Він більше не спіймає баг, бо записав його як норму.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>09</span></div>
+</section>
+
+<!-- 10 PLANS -->
+<section class="slide" data-notes="Папок Smoke і Regression нема - вони копіюють кейси. План - збережений запит. Клікаю чипи - складається запит. План з’являється, коли кейси однієї роботи розійшлись по двох і більше папках: афіліат-воронка - 46 кейсів у восьми. Kit сам запропонував план з числом. Пастка: поле запиту в API тільки на запис, у відповіді null.">
+  <div class="head"><div><p class="eyebrow">Тест-плани</p><h2>Папки Regression/ нема. План - це запит</h2></div><div class="aside">клікни чипи</div></div>
+  <div class="body cols w3">
+    <div style="display:grid;gap:16px;align-content:start">
+      <table class="t">
+        <tr><th>План</th><th>Запит</th></tr>
+        <tr><td>Smoke - post deploy</td><td class="m">priority = P0</td></tr>
+        <tr><td>Full regression</td><td class="m">priority in (P0,P1,P2) AND layer = ui</td></tr>
+        <tr><td>PDP template matrix</td><td class="m">folder = 05_PDP AND template = *</td></tr>
+        <tr><td>Mobile critical</td><td class="m">device = mobile AND priority in (P0,P1)</td></tr>
+        <tr><td>Affiliate creator funnel</td><td class="m">journey = J6_affiliate_program</td></tr>
+      </table>
+      <div id="filter" style="display:flex;flex-wrap:wrap;gap:8px"><button class="chip" data-k="priority" data-v="P0">P0</button><button class="chip" data-k="priority" data-v="P0,P1">P0-P1</button><button class="chip" data-k="device" data-v="mobile">mobile</button><button class="chip" data-k="layer" data-v="ui">ui</button><button class="chip" data-k="layer" data-v="a11y">a11y</button><button class="chip" data-k="journey" data-v="J6_affiliate_program">J6_affiliate_program</button><button class="chip" data-k="tag" data-v="@automation-candidate">@automation-candidate</button></div>
+      <div id="query" style="font-family:var(--mono);font-size:14px;padding:14px 18px;border-radius:14px;background:var(--dark);color:var(--cream);min-height:52px"><span style="color:var(--mocha2)"># новий зріз - новий запит, не нова папка</span></div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card"><div class="l">Коли план заводиться</div><h3>Дві папки і більше</h3><p>Афіліат-воронка: 46 кейсів у 8 сьютах. Kit сам запропонував план і сказав, скільки має вийти.</p></div>
+      <div class="card"><div class="l">Пастка API</div><h3>Поле, яке не повертається</h3><p>Створюєш план з фільтром - у відповіді null. Фільтр застосований. Перевіряй вмістом.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>10</span></div>
+</section>
+
+<!-- 11 DEMO -->
+<section class="slide alt" data-notes="Живий приклад, усі вісім робіт по черзі - праворуч видно, яка задіяна. BMS-6749 - квіз реєстрації креатора. Репліки - зразки, не цитати. Акценти: знімок макета першим і одразу три розходження з описом; календар - спільний компонент; моя помилка на око проти виміру; три файли; регресія; howto; і гейт, який відмовляє сказати «готово».">
+  <div class="head"><div><p class="eyebrow">Живий приклад · BMS-6749 · Affiliate Landing: Quiz</p><h2>Одна задача через усі вісім робіт</h2></div><div class="aside">→ наступна репліка</div></div>
+  <div class="body chatwrap">
+    <div class="chat"><div class="hdr"><span>CLAUDE · TESTOMAT QA KIT</span><span id="chatstep">0 / 18</span></div><div class="msgs" id="msgs"></div></div>
+    <div class="works" id="works">
+      <div class="wk" data-work="8"><span class="n">08</span><span>Леджер і гейт</span></div>
+      <div class="wk" data-work="7"><span class="n">07</span><span>Макет як дані</span></div>
+      <div class="wk" data-work="1"><span class="n">01</span><span>Кейси у дерево</span></div>
+      <div class="wk" data-work="2"><span class="n">02</span><span>Прогін проти store</span></div>
+      <div class="wk" data-work="6"><span class="n">06</span><span>Клавіші по-справжньому</span></div>
+      <div class="wk" data-work="4"><span class="n">04</span><span>Три звіти</span></div>
+      <div class="wk" data-work="3"><span class="n">03</span><span>Регресія</span></div>
+      <div class="wk" data-work="5"><span class="n">05</span><span>Howto в Confluence</span></div>
+      <div class="wknote" id="wknote">Квіз: 4 питання + фінал. Для країн без програми - waitlist із 2 кроків. 98 вимог у ТЗ.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Репліки - зразки, не цитати. Команд вчити не треба</span><span>11</span></div>
+</section>
+
+<!-- 12 GOAL TO GATE -->
+<section class="slide" data-notes="Що стоїть за діалогом. Запит - це ціль, не команда. «Заведи кейси» означає: покриття є, записане, прогнане, падіння розібрані, звіт є. Порядок завжди один. Одинадцять вимірів покриття - кожен покритий або з причиною. Блокер - п’ять полів. Замість поради - дія.">
+  <div class="head"><div><p class="eyebrow">Під капотом</p><h2>Запит - це ціль, а не команда</h2></div><div class="aside">tm task open · status · close</div></div>
+  <div class="body" style="display:grid;gap:22px;align-content:start">
+    <div class="flow"><span>зрозуміти ціль</span><span class="a">→</span><span>зібрати контекст</span><span class="a">→</span><span>розкласти на пункти</span><span class="a">→</span><span>зробити</span><span class="a">→</span><span>перевірити</span><span class="a">→</span><span>знайти залишок</span><span class="a">→</span><span>зробити і його</span><span class="a">→</span><span class="g">закрити гейтом</span></div>
+    <div class="grid3">
+      <div class="card step"><div class="rule"></div><h3>11 вимірів покриття</h3><p>happy, negative, boundary, states, responsive… Кожен - покритий, або діра з причиною. Мовчки пропустити не можна.</p></div>
+      <div class="card step"><div class="rule"></div><h3>Блокер - п’ять полів</h3><p>Що заблоковано, що спробував, чого бракує, найменша дія людини, що стане можливим після.</p></div>
+      <div class="card dk step"><div class="rule" style="background:var(--mocha2)"></div><h3>Гейт відмовляє</h3><p>Поки є відкритий пункт, падіння без розбору або блокер без п’яти полів. Вердикт ставить гейт, не агент словами.</p></div>
+    </div>
+    <p class="quote step">«Варто звірити з Figma» - ні. Звіряє.</p>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>12</span></div>
+</section>
+
+<!-- 13 MEMORY -->
+<section class="slide alt" data-notes="Чат забуває все. Тут стан лежить у файлах. Найпомітніше для QA - леджер відповідає на питання, яке в чаті зникає першим: що ще лишилось. Два хуки: перший читає леджери на старті і після стискання контексту, другий не дає сказати «готово». Чесно: стан локальний, синхронізує git; хуки лише в Claude Code; пам’ять про роботу, не про людину.">
+  <div class="head"><div><p class="eyebrow">Пам’ять між сесіями</p><h2>Чат забуває. Kit читає файл</h2></div><div class="aside">.state/</div></div>
+  <div class="body cols">
+    <table class="t" style="align-self:start">
+      <tr><th>Файл</th><th>Що в ньому</th><th>Зараз</th></tr>
+      <tr><td class="m">mission.json</td><td>де ми: фаза, гейт, блокери</td><td>одне джерело істини</td></tr>
+      <tr><td class="m">progress.jsonl</td><td>журнал зробленого, з хеш-ланцюгом</td><td>299 подій</td></tr>
+      <tr><td class="m">tasks/*.json</td><td>леджер задачі: пункти, залишок, докази</td><td>5 відкритих</td></tr>
+      <tr><td class="m">case-checks.yaml</td><td>розмітка перевірок</td><td>153 кейси, 896 перевірок</td></tr>
+      <tr><td class="m">runs/</td><td>звіти прогонів</td><td>19</td></tr>
+      <tr><td class="m">fixtures.yaml</td><td>реальні хендли товарів</td><td>37</td></tr>
+    </table>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card dk step"><div class="l">Хук 1 · SessionStart</div><h3>Читає, що недороблено</h3><p>На старті - і після стискання контексту. Момент, коли чат усе забуває, тут - момент перечитати леджер.</p></div>
+      <div class="card dk step"><div class="l">Хук 2 · Stop</div><h3>Не дає сказати «готово»</h3><p>Є пункт, який агент ще може зробити сам, - завершення блокується. Текст правила не спиняє. Спиняє хук.</p></div>
+      <p class="step" style="margin:0;font-size:15px;color:var(--muted)">Чесно: стан локальний, синхронізує git. Хуки лише в Claude Code. Пам’ять про роботу, не про людину.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>13</span></div>
+</section>
+
+<!-- 14 SCRIPTS -->
+<section class="slide" data-notes="38 скриптів, 19 тисяч рядків, ідея одна: правило живе лише там, де його перевіряє машина. Клікаю по групах. У кожного в колонці «навіщо» - конкретна історія, не «було б добре». До команди tm треба було знати шість скриптів і їх порядок.">
+  <div class="head"><div><p class="eyebrow">Скрипти</p><h2>Правило живе там, де його перевіряє машина</h2></div><div class="aside">38 скриптів · 19 120 рядків</div></div>
+  <div class="body cols w3">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div id="sgtog" style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip on" data-g="0">пишуть у testomat</button><button class="chip" data-g="1">перевіряють</button><button class="chip" data-g="2">збирають обсяг</button><button class="chip" data-g="3">тримають дисципліну</button></div>
+      <table class="t" id="sgtable" style="font-size:14.5px"></table>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card dk"><div class="l">Одна точка входу</div><h3>tm</h3><p>До неї треба було знати шість скриптів, їхній порядок і прапорці. Тепер - словами в чаті.</p></div>
+      <div class="card"><h3>Кожен - з граблів</h3><p>Не «було б добре автоматизувати», а «зламалось ось так, і більше не має». Історії - на слайді «Граблі».</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>14</span></div>
+</section>
+
+<!-- 15 LAYOUT AS DATA -->
+<section class="slide alt" data-notes="Макет читається як дерево вузлів, не як картинка. Приклад з демо: на око здалось, що сусідні дні приглушені. Вимір гліфів: усі одного кольору, збірка = макет. І навпаки: сітка 42 проти 35 - число з вузла, не «здається». Правила: знімок першим, дерево замість рендера, інстанс розкриваємо, дірка в макеті - питання до прогону.">
+  <div class="head"><div><p class="eyebrow">Верстка</p><h2>Макет - це дані, а не картинка</h2></div></div>
+  <div class="body cols">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card dk step"><div class="l">З демо · календар</div><div class="big" style="font-size:36px;font-family:var(--mono);letter-spacing:0">rgb(113,103,101)</div><p>На око: сусідні дні приглушені. Вимір гліфів: усі одного кольору. Збірка збігається з макетом. Дефект знято.</p></div>
+      <div class="card step"><div class="l">І навпаки</div><h3>42 комірки проти 35</h3><p>Висота картки 361 проти 352. Числа з вузлів макета, не «здається, забагато». Такий пункт іде в story bug.</p></div>
+    </div>
+    <ul class="clean" style="align-content:start">
+      <li><b>Знімок макета перший.</b> Без нього збірка не міряється.</li>
+      <li><b>Дерево замість рендера.</b> Розмір, відступ, назва шару - з метаданих.</li>
+      <li><b>Інстанс розкриваємо до компонента.</b> «У макеті не намальовано» - тільки після цього.</li>
+      <li><b>Заміряємо все.</b> Не тільки те, на що показали.</li>
+      <li><b>Дірка в макеті - знахідка.</b> Питання дизайну до прогону, не баг після релізу.</li>
+      <li><b>Три шари.</b> Еталон на design-guide, сценарій на сторінці, геометрія саме тут.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>15</span></div>
+</section>
+
+<!-- 16 A11Y -->
+<section class="slide" data-notes="Неприємна знахідка: вбудована браузерна панель не доставляє клавіші в сторінку. Один дефект був записаний хибно - Enter просто не доїхав. Тому - тонка обгортка над Playwright, п’ять проб. На BMS-6720 - ще три дефекти до дванадцяти. Скоуп a11y - шість критеріїв, один кейс на критерій. Пастка: рамку фокуса читати через 350 мс.">
+  <div class="head"><div><p class="eyebrow">Доступність</p><h2>Клавіші тиснуться тільки в справжньому браузері</h2></div><div class="aside">tools/qa-browser</div></div>
+  <div class="body cols">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card step"><div class="rule" style="background:var(--fail)"></div><h3>Панель клавіші не доставляє</h3><p>Нуль подій keydown. У задачу поїхав «Enter не відкриває селект» - Enter просто не доїхав.</p></div>
+      <div class="probes step">
+        <div><code>tabWalk</code><span>справжній Tab, порядок фокуса</span></div>
+        <div><code>pressSeq</code><span>клавіші з читанням стану між ними</span></div>
+        <div><code>axTree</code><span>що чує скрінрідер, текстом</span></div>
+        <div><code>axeScan</code><span>axe-core по сторінці</span></div>
+        <div><code>contrast</code><span>контраст, зокрема поверх картинки</span></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card dk step"><div class="l">BMS-6720</div><div class="big">+3 <small>до дванадцяти</small></div><p>Справжні клавіші плюс дерево доступності. Два з трьох - рівня A.</p></div>
+      <div class="card step"><div class="l">Шість критеріїв, не весь WCAG</div><div class="crit"><div><code>1.1.1</code>Alt</div><div><code>1.2.2</code>Captions</div><div><code>2.1.1</code>Keyboard</div><div><code>3.3.2</code>Labels</div><div><code>4.1.2</code>Name/Role</div><div><code>1.4.3</code>Contrast</div></div><p style="margin-top:6px">Один кейс на критерій. Не шість на кожен компонент.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Пастка: рамку фокуса читати через 350 мс, у неї анімація</span><span>16</span></div>
+</section>
+
+<!-- 17 REPORTS -->
+<section class="slide alt" data-notes="Kit нічого не постить. Три файли, далі вирішую я. Story bug - числа, не прикметники. Коментар - питання у формі вибору, зі справжніми згадками. Звіт - з розділом «межі». Чому окремо: на питання відповідають дизайн і менеджмент, а баг лежить у розробника.">
+  <div class="head"><div><p class="eyebrow">Звіти</p><h2>Три файли і жодного постингу</h2></div><div class="aside">21 тека з чернетками</div></div>
+  <div class="body" style="display:grid;gap:18px;align-content:start">
+    <div class="grid3">
+      <div class="card step"><div class="l">→ розробник</div><h3>Story bug</h3><p>Кожен пункт: не так - 8, має бути - 6, звідки число. Дві групи: правити зараз і чекає на дизайн.</p></div>
+      <div class="card step"><div class="l">→ дизайн, менеджмент</div><h3>Коментар у задачу</h3><p>Зараз так, у макеті так, питання: лишаємо чи знімаємо? Згадки справжні, не текстовий @.</p></div>
+      <div class="card dk step"><div class="l">→ QA</div><h3>Звіт прогону</h3><p>Що перевірено, чим доведено. І обов’язково - чого не перевірено і чому.</p></div>
+    </div>
+    <p class="quote step" style="max-width:46ch">Дефекти й питання окремо, бо відповідають різні люди. Змішаєш - розробник отримує список, де половина не до нього.</p>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>17</span></div>
+</section>
+
+<!-- 18 RELEASE -->
+<section class="slide" data-notes="Два прогони, бо два питання: чи не зламали - на прев’ю, чи доїхало - на проді. Радіус збирається по лейблах, не по домену: кейс SEO з «нефункціонального» ділить апку з PDP і ламається разом з ним. Вхід - мій перелік задач. Задачі без кейсів - окремо. Реальний: 3 тікети, 140 кейсів.">
+  <div class="head"><div><p class="eyebrow">Регресія релізу</p><h2>Два питання - два прогони</h2></div><div class="aside">tm regress · tm release</div></div>
+  <div class="body cols">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="grid2">
+        <div class="card step"><div class="l">До релізу · прев’ю</div><h3>Чи не зламали</h3><p>кейси задач + радіус + свіжі за вікно</p></div>
+        <div class="card dk step"><div class="l">Після · прод</div><h3>Чи доїхало</h3><p>кейси задач + смоук поверхні</p></div>
+      </div>
+      <div class="card step"><h3>Радіус - по лейблах, не по домену</h3><p>Сусідство - це спільний код: поверхня, шаблон, апка. Береться тільки P0-P1.</p></div>
+      <p class="step" style="margin:0;font-size:15px;color:var(--muted)">Вхід - перелік задач від QA. Задачі без кейсів - окремим рядком. Реальний прогін: 3 тікети, 140 кейсів.</p>
+    </div>
+    <div class="radius">
+      <svg viewBox="0 0 560 360" role="img" aria-label="Радіус зачеплення">
+        <defs><radialGradient id="g"><stop offset="0" stop-color="#75675b" stop-opacity=".2"/><stop offset="1" stop-color="#75675b" stop-opacity="0"/></radialGradient></defs>
+        <circle cx="230" cy="180" r="150" fill="url(#g)"/><circle cx="230" cy="180" r="150" fill="none" stroke="#332726" stroke-dasharray="4 6" stroke-opacity=".5"/>
+        <text x="230" y="22" text-anchor="middle" fill="#332726">спільний surface / template / app</text>
+        <line x1="230" y1="180" x2="120" y2="110" stroke="#e8e3da"/><line x1="230" y1="180" x2="330" y2="90" stroke="#e8e3da"/><line x1="230" y1="180" x2="140" y2="270" stroke="#e8e3da"/><line x1="230" y1="180" x2="345" y2="255" stroke="#e8e3da"/>
+        <line x1="230" y1="180" x2="470" y2="300" stroke="#332726" stroke-width="1.5"/>
+        <circle cx="230" cy="180" r="34" fill="#332726"/><text x="230" y="176" text-anchor="middle" fill="#fffcf5" font-weight="500">PDP-REVW</text><text x="230" y="190" text-anchor="middle" fill="#c9b8a6">правлено</text>
+        <circle cx="120" cy="110" r="20" fill="#f4efe8"/><text x="120" y="114" text-anchor="middle">surface</text>
+        <circle cx="330" cy="90" r="20" fill="#f4efe8"/><text x="330" y="94" text-anchor="middle">template</text>
+        <circle cx="140" cy="270" r="20" fill="#f4efe8"/><text x="140" y="274" text-anchor="middle">app</text>
+        <circle cx="345" cy="255" r="20" fill="#f4efe8"/><text x="345" y="259" text-anchor="middle">surface</text>
+        <circle cx="470" cy="300" r="26" fill="#f4efe8" stroke="#332726"/><text x="470" y="297" text-anchor="middle" fill="#332726">NFR-SEO</text><text x="470" y="310" text-anchor="middle">app=stamped</text>
+        <text x="470" y="340" text-anchor="middle">інший домен, але в радіусі</text>
+        <circle cx="500" cy="120" r="16" fill="#f4efe8"/><text x="500" y="150" text-anchor="middle" fill="#a8a29e">P2 - поза радіусом</text>
+      </svg>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>18</span></div>
+</section>
+
+<!-- 19 CONFLUENCE -->
+<section class="slide alt" data-notes="Спочатку kit публікував у Confluence покриття і звіти. Через тиждень - нікому не треба, для цього є testomat. Тепер один вид - howto: як працює, що заповнити, де видно. Читач - контент-команда. Кейс каже, як має бути. Інструкція - як є. Тому зміст з реалізації.">
+  <div class="head"><div><p class="eyebrow">Документація</p><h2>У Confluence їде одне - інструкція</h2></div><div class="aside">publish-doc.py</div></div>
+  <div class="body cols">
+    <div class="grid2" style="align-content:start">
+      <div class="card step"><div class="l">Кейс</div><h3>як має бути</h3><p>Збірка - предмет перевірки, не джерело.</p></div>
+      <div class="card dk step"><div class="l">Інструкція</div><h3>як є</h3><p>Збірка - предмет опису. Зміст із коду теми і живої сторінки.</p></div>
+      <div class="card step" style="grid-column:1/-1"><h3>Читач - контент-команда</h3><p>Як вмикається, що заповнити в адмінці і де саме, де видно. Щоб зробити роботу, нікого не питаючи.</p></div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card step"><div class="rule" style="background:var(--fail)"></div><h3>Чого там нема</h3><p>Покриття і звітів прогонів - для них є testomat. «Згенеровано», переліків джерел, скріншотів. Порожніх сторінок «на майбутнє».</p></div>
+      <p class="quote step" style="font-size:22px">Дока має бути чисто по факту, що саме вона описує.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>19</span></div>
+</section>
+
+<!-- 20 RAKES -->
+<section class="slide" data-notes="Найкращий слайд. Кожен скрипт і правило - після конкретної відмови. Клікаю три-чотири: API 200 без роботи, теги, бекап, «готово». Решту почитають самі.">
+  <div class="head"><div><p class="eyebrow">Звідки взялись правила</p><h2>Дванадцять граблів</h2></div><div class="aside">клікни на граблі</div></div>
+  <div class="body rakes" id="rakes">
+    <button class="rk"><span class="n">01</span><h4>API сказав «успішно» і не зробив нічого</h4><div class="d">Невідоме значення лейбла тихо не застосовується. 25 кейсів «успішно» - і всі без лейблів.<b>Тепер після запису - перечитування. Код 200 - не доказ.</b></div></button>
+    <button class="rk"><span class="n">02</span><h4>Оновлення назви знесло теги</h4><div class="d">PUT з одним полем title скидає теги. 46 кейсів втратили @regression без жодної помилки.<b>Окремий скрипт доставки тегів.</b></div></button>
+    <button class="rk"><span class="n">03</span><h4>Бекап рахував, а не читав</h4><div class="d">У бекапі 14 повідомлень про помилку замість 14 кейсів. Скрипт казав «успіх».<b>Бекап валідує вміст. Без нього знесення не запускається.</b></div></button>
+    <button class="rk"><span class="n">04</span><h4>ID три місяці проходив повз lint</h4><div class="d">У коді групи дозволені лише літери. ID з цифрою lint не бачить узагалі.<b>Зелений lint - «те, що бачу, ок». Не «все ок».</b></div></button>
+    <button class="rk"><span class="n">05</span><h4>Прогін три дні міряв не ту тему</h4><div class="d">70 перевірок звітували «предмета не збудували» проти чужої гілки.<b>Раннер читає тему зі сторінки. Не та - прогін недійсний.</b></div></button>
+    <button class="rk"><span class="n">06</span><h4>85 кроків чекали на девів дарма</h4><div class="d">155 «нема селектора». 85 з них - дії: «закрий drawer», «перемкни маркет». Жоден атрибут не допоміг би.<b>Робота була у нас.</b></div></button>
+    <button class="rk"><span class="n">07</span><h4>Дефект без дефекту</h4><div class="d">«Enter не відкриває селект». Панель просто не доставила Enter.<b>Клавіші - тільки справжній браузер.</b></div></button>
+    <button class="rk"><span class="n">08</span><h4>Відсутність прийняли за поламаність</h4><div class="d">Три «розходження» на PDP. Задачі на PDP просто ще не було.<b>Відсутність предмета - ще не знахідка.</b></div></button>
+    <button class="rk"><span class="n">09</span><h4>Числа розійшлись у п’яти документах</h4><div class="d">22 з 23 пар не збігались.<b>Одне місце для чисел, і воно генерується.</b></div></button>
+    <button class="rk"><span class="n">10</span><h4>Пошук віддавав у п’ять разів більше</h4><div class="d">testomat розбиває запит на слова: BMS-6749 - 117 кейсів замість 25.<b>Окремий скрипт для зв’язки кейс-задача.</b></div></button>
+    <button class="rk"><span class="n">11</span><h4>Поле, яке не повертається</h4><div class="d">Фільтр плану у відповіді null. Здалось - ігнорує. Насправді write-only.<b>Перевіряти вмістом.</b></div></button>
+    <button class="rk"><span class="n">12</span><h4>«Готово», коли не готово</h4><div class="d">Написав кейси і зупинився. Прогнав щасливий шлях і зупинився. Ніде не було переліку залишку.<b>Леджер плюс хук, який блокує «готово».</b></div></button>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>20</span></div>
+</section>
+
+<!-- 21 YOUR OWN -->
+<section class="slide alt" data-notes="Kit нічого не монополізує. Поруч уже живуть два скіли - a11y-audit і redesign-component-qa - і користуються тими самими скриптами, станом і браузером. Свій чеклист, промпт, скіл - кладеш поруч. Одне правило: зміни в спільне - через гілку, бо kit оновлюється в колег автоматично.">
+  <div class="head"><div><p class="eyebrow">Своє</p><h2>Свій скіл кладеш поруч - і працює</h2></div><div class="aside">.claude/skills/</div></div>
+  <div class="body cols">
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card step"><div class="l">Так уже зроблено</div><h3>a11y-audit · redesign-component-qa</h3><p>Два окремі скіли. Не всередині основного промпта - поруч. Ті самі скрипти, той самий стан, той самий браузер.</p></div>
+      <div class="card dk step"><h3>Що дістається безкоштовно</h3><p>Резолвер і дерево · раннер і фікстури · леджер і гейт · справжній браузер · lint · три форми звітів.</p></div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card step"><h3>Для кожного в команді</h3><p>Свій чеклист, свій промпт під свою зону, свій скіл під свій тип задач. Без переписування основного і без дозволів.</p></div>
+      <div class="card step"><div class="rule" style="background:var(--fail)"></div><h3>Одне правило</h3><p>Зміни в спільне - через гілку і з відмашки. Kit оновлюється в колег сам, тому коміт у main - це зміна інструмента в чужих руках посеред роботи.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Клонуєш репо - працюєш у теці. Тека і є продукт</span><span>21</span></div>
+</section>
+
+<!-- 22 LIMITS -->
+<section class="slide" data-notes="Найкорисніший слайд. Не робить принципово - шість пунктів. Не замінює QA: 425 з 896 перевірок - ручні назавжди. Вміє відмовлятись. І п’ять фраз.">
+  <div class="head"><div><p class="eyebrow">Межі</p><h2>Чого kit не робить</h2></div><div class="aside">і це фіча</div></div>
+  <div class="body" style="display:grid;grid-template-columns:5fr 4fr 5fr;gap:14px">
+    <div class="card"><h3>Принципово</h3><ul class="clean" style="gap:8px;font-size:15px"><li><b>Не створює сьюти.</b></li><li><b>Не заводить лейбли.</b> Це право однієї людини.</li><li><b>Не проходить гейти.</b> Їх проходить людина.</li><li><b>Не постить у Jira.</b></li><li><b>Не пише автотести.</b> Playwright - лінійка, не верстак.</li><li><b>Не чіпає стару тему.</b> У неї свій проєкт.</li></ul></div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card dk"><div class="l">Не замінює QA</div><div class="big">425 <small>із 896</small></div><p>перевірок - ручні. І це назавжди. Половина роботи машинною не стає й не мусить.</p></div>
+      <div class="card"><h3>Вміє відмовлятись</h3><p>Не знайшло місця - пропонує і зупиняє пункт. Не впевнене - утримується, не вгадує.</p></div>
+    </div>
+    <div class="phrases">
+      <div class="phrase">Це kit, а не скіл.<small>Скіл - текст. Kit - скрипти, пам’ять, хуки, і потім промпт.</small></div>
+      <div class="phrase">Правило живе там, де його перевіряє машина.</div>
+      <div class="phrase">Відсутність предмета - ще не знахідка.</div>
+      <div class="phrase">Дивитись на рендер - не вимір.</div>
+      <div class="phrase">Код 200 - не доказ, що робота зроблена.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>22</span></div>
+</section>
+
+<!-- 23 END -->
+<section class="slide darker end" data-notes="Дякую. Репо - bttrm-qa-lab/shopify-testomat-agent. Клонуйте, пробуйте на своїй задачі, пишіть, що не так - кожен такий випадок стає правкою або правилом.">
+  <div>
+    <h1>Питання?</h1>
+    <p>bttrm-qa-lab/shopify-testomat-agent</p>
+    <p style="font-size:20px;color:var(--mocha2)">Клонуйте, пробуйте на своїй задачі, пишіть, що не так.</p>
+  </div>
+  <div class="foot"><span>Testomat QA kit · BetterMe Store</span><span>23</span></div>
+</section>
+
+</div>
+</div>
+
+<div id="bar"><i></i></div>
+<div id="hint">← → пробіл · N нотатки · F екран</div>
+<div id="hud"><button id="prev" aria-label="Назад">←</button><span id="counter" style="padding:0 8px">1 / 23</span><button id="next" aria-label="Далі">→</button><button id="fs" aria-label="На весь екран">⛶</button></div>
+<div id="notes" hidden><div class="t">Нотатки спікера</div><div id="notesbody"></div></div>
+
+<script>
+(function(){
+  const slides=[...document.querySelectorAll('.slide')];
+  const stage=document.getElementById('stage');
+  let i=0;
+  const counter=document.getElementById('counter'),bar=document.querySelector('#bar i');
+  const notes=document.getElementById('notes'),notesbody=document.getElementById('notesbody');
+  function fit(){const s=Math.min((innerWidth-32)/1280,(innerHeight-84)/720);stage.style.transform=`scale(${s})`}
+  addEventListener('resize',fit);fit();
+  function show(n){
+    n=Math.max(0,Math.min(slides.length-1,n));
+    slides[i].classList.remove('active');i=n;
+    const s=slides[i];s.classList.add('active');
+    counter.textContent=(i+1)+' / '+slides.length;
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    notesbody.textContent=s.dataset.notes||'';
+    enter(s);
+  }
+  function enter(s){
+    s.querySelectorAll('.step').forEach((e,k)=>setTimeout(()=>e.classList.add('on'),120+k*130));
+    if(s.querySelector('[data-count]'))count(s);
+    setTimeout(()=>s.querySelectorAll('[data-w]').forEach(b=>b.style.width=b.dataset.w+'%'),200);
+    if(s.querySelector('#msgs')&&chatI===0)setTimeout(chatNext,500);
+  }
+  function count(s){
+    s.querySelectorAll('[data-count]').forEach(el=>{
+      const to=+el.dataset.count,t0=performance.now(),d=1400;
+      (function f(t){const p=Math.min(1,(t-t0)/d),e=1-Math.pow(2,-10*p);el.textContent=Math.round(to*(p>=1?1:e)).toLocaleString('uk-UA');if(p<1)requestAnimationFrame(f)})(t0);
+    });
+  }
+  document.querySelectorAll('.ab').forEach(a=>a.addEventListener('click',()=>a.classList.toggle('open')));
+  const lys=document.querySelectorAll('.ly');lys.forEach(l=>l.addEventListener('click',()=>lys.forEach(x=>x.classList.toggle('on',x===l))));if(lys.length)lys[lys.length-1].classList.add('on');
+  document.querySelectorAll('.rk').forEach(r=>r.addEventListener('click',()=>{const was=r.classList.contains('on');document.querySelectorAll('.rk').forEach(x=>x.classList.remove('on'));if(!was)r.classList.add('on')}));
+  document.querySelectorAll('#ptable tr').forEach(r=>r.addEventListener('click',()=>{document.querySelectorAll('#ptable tr').forEach(x=>x.classList.remove('on'));r.classList.add('on')}));
+  const parts=document.querySelectorAll('#casecard .part'),ans=document.querySelectorAll('#anno .an');
+  function hl(p){parts.forEach(x=>x.classList.toggle('hl',x.dataset.p===p));ans.forEach(x=>x.classList.toggle('on',x.dataset.p===p))}
+  ans.forEach(a=>['mouseenter','focus','click'].forEach(ev=>a.addEventListener(ev,()=>hl(a.dataset.p))));
+  document.getElementById('anno').addEventListener('mouseleave',()=>hl(null));
+  const sel={};const query=document.getElementById('query');
+  document.querySelectorAll('#filter .chip').forEach(c=>c.addEventListener('click',()=>{
+    const k=c.dataset.k,v=c.dataset.v;
+    if(sel[k]===v){delete sel[k];c.classList.remove('on')}else{sel[k]=v;document.querySelectorAll(`#filter .chip[data-k="${k}"]`).forEach(x=>x.classList.remove('on'));c.classList.add('on')}
+    const ps=Object.entries(sel).map(([k,v])=>v.includes(',')?`${k} in (${v})`:`${k} = ${v}`);
+    query.innerHTML=ps.length?`<span style="color:var(--mocha2)"># тест-план</span><br>${ps.join(' <span style="color:var(--mocha2)">AND</span> ')}`:'<span style="color:var(--mocha2)"># новий зріз - новий запит, не нова папка</span>';
+  }));
+  const groups=[
+    [['write-cases.py','334','записує кейси за шляхом. Сьютів не створює'],['sync-case-tags.py','100','PUT з одним полем title скидає теги - 46 кейсів втратили @regression'],['sync-checks.py','264','розмітка в тіла кейсів: руками - 143 запити на один селектор'],['link-issues.py','170','пошук розбиває запит на слова: 117 кейсів замість 25'],['backup-project.py','230','бекап з перевіркою вмісту: попередній мав 14 помилок замість 14 кейсів']],
+    [['run-cases.py','1589','раннер: три списки - passed, failed, not_run з причиною'],['verify-fixtures.py','901','чи товар досі має властивість, яку обіцяє реєстр'],['run-evals.py','459','точність резолвера проти еталона'],['negtest.py','218','мутації стану тільки в тимчасовому клоні']],
+    [['release-regression.py','562','перелік задач → два прогони в testomat'],['regression-scope.py','416','«під цей тікет є кейси?» - детерміновано'],['plan-preview.py','236','скільки кейсів у плані сьогодні'],['ticket-truth.py','221','ловить «зробили інакше» в коментарях'],['task-ledger.py','979','леджер і гейт закриття']],
+    [['lint-conventions.py','2369','ID, назви, лейбли, DoD. Pre-commit, півтори секунди'],['render-status.py','208','STATUS.md - єдине місце для чисел'],['gen-id-pattern.py','377','закритий список кодів у контракт'],['publish-doc.py','202','чи можна публікувати в Confluence: чотири відмови'],['release-skill.py','169','реліз однією фразою']]
+  ];
+  const sgt=document.getElementById('sgtable');
+  function sg(g){document.querySelectorAll('#sgtog button').forEach(b=>b.classList.toggle('on',+b.dataset.g===g));sgt.innerHTML='<tr><th>Скрипт</th><th>Рядків</th><th>Навіщо</th></tr>'+groups[g].map(r=>`<tr><td class="m" style="white-space:nowrap">${r[0]}</td><td class="m" style="color:var(--muted)">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}
+  document.querySelectorAll('#sgtog button').forEach(b=>b.addEventListener('click',()=>sg(+b.dataset.g)));sg(0);
+
+  const script=[
+    {me:1,t:'Беремо BMS-6749 - квіз реєстрації креатора. Напиши кейси за ТЗ і макетом і доведи до звіту.',w:8,n:'Запит - це ціль, не команда. Він розгортається в повний перелік пунктів.'},
+    {t:'Відкрила леджер: ціль розгорнута в пункти - контекст, кейси, прогін, руками, звіт. ТЗ: 4 питання і фінал, для непідтримуваних країн waitlist, 98 вимог. Збірка заблокована інпутами.<div class="mono" style="margin-top:6px">Правда - компоненти у Figma і ТЗ, не збірка.</div>',w:8,n:'Леджер - файл. Він переживає кінець сесії і стискання контексту.'},
+    {t:'Зняла макет як дані - метадані фреймів і змінні. І вже видно три місця, де опис задачі суперечить макету: стрілка «назад» на першому кроці, кнопки на фіналі, «Next» на четвертому. Це питання до автора ТЗ, не баги.',w:7,n:'Дірка в макеті - знахідка до прогону, а не баг після релізу.'},
+    {t:'Резолвер розклав: лендінги, а календар - у компоненти як еталон плюс геометрія тут, на квізі. Дублів нема. Перший рядок кожного - Source: BMS-6749. Лягли у кілька сьютів - пропоную план з числом. Пишу?',w:1,n:'Сьютів не створює. Не знайшов місця - пропозиція і зупинка пункту.'},
+    {me:1,t:'Пройди обидві гілки - звичайну і waitlist. 18 років день у день, обидві згоди. Тоді кейси ок.',w:1,n:'Валідація кейсів - крок QA. Без «кейси ок» прогону не буде.'},
+    {t:'Записала і перечитала: підтверджено стільки, скільки планувала. Тема зі сторінки збігається. Прогін:<div class="three"><span class="tag ok">зійшлось</span><span class="tag fail">не зійшлось · з доказом</span><span class="tag">не перевіряв · з причиною</span></div><div class="mono" style="margin-top:6px">Календар: сітка 42 комірки, у макеті 35. Висота 361 проти 352. Числа з вузлів макета. Правити в спільному компоненті.</div>',w:2,n:'Після запису кейс перечитується: код 200 - не доказ, що робота зроблена.'},
+    {me:1,t:'Мені здається, сусідні дні в макеті приглушені, а в збірці такі ж. Перевір пікселями, не на око.',w:7,n:''},
+    {t:'Відрендерила вузол макета і заміряла гліфи. Усі дні rgb(113,103,101) - і сусідні, і поточні. Збірка збігається з макетом. Дефект знімаю. Лишається питання дизайну - в коментар, не в story bug.',w:7,n:'Дивитись на рендер - не вимір. Число з вузла важить більше за око.'},
+    {me:1,t:'Пройди Tab по третьому кроку і календарю справжнім браузером, зніми дерево доступності.',w:6,n:''},
+    {t:'tabWalk: поле, календар, кнопка. Рамку фокуса читала через 350 мс. Порожні комірки не фокусуються. axTree: комірка несе повну дату. Кейс доступності - один на критерій, таблиця елементів.',w:6,n:'Вбудована панель не доставляє клавіші. Клавіатура - тільки звідси.'},
+    {me:1,t:'Збери три файли. Дефекти - у story bug. Питання - окремо: waitlist, версії Terms, прапорці, фрейми без документації.',w:4,n:''},
+    {t:'Три файли в теці. Story bug «issues on [dev] Affiliate Landing: Quiz» - 8 пунктів з числами і лінками на вузли. Коментар - 6 питань, кожне з адресатом і у формі вибору. Звіт з розділом «межі». Нічого не постила.',w:4,n:'Дефекти й питання окремо: відповідають різні люди.'},
+    {me:1,t:'Квіз їде в реліз з лендінгом і ще одним тікетом. Збери регресію.',w:3,n:''},
+    {t:'Три тікети → кейси задач + радіус по спільних surface / template / app, лише P0-P1 + свіжі за вікно. Прогін «Регресія dev» у testomat, посилання є. Після релізу - «Приймання prod». Окремо: під один тікет кейсів нема.',w:3,n:'Вхід - перелік задач від QA. Обсяг релізу він не вгадує.'},
+    {me:1,t:'І напиши інструкцію по квізу в Confluence.',w:5,n:''},
+    {t:'Howto готовий: як вмикається, що заповнити в адмінці - шість полів під картинки, версії Terms і Privacy, посилання, - де видно, де в темі лежить. Зміст із реалізації, не з ТЗ. Публікую після твого «ок».',w:5,n:'Один вид документа. Покриття і звіти туди не їдуть.'},
+    {me:1,t:'Все, готово?',w:8,n:''},
+    {t:'Ні. Гейт відмовляє: один пункт відкритий - куди їде waitlist, відповіді продакта нема. Блокер записаний п’ятьма полями. Вердикт - частково заблоковано, не «готово».',w:8,n:'Вердикт ставить гейт, не агент словами. Хук не дає закрити раніше часу.'},
+  ];
+  let chatI=0;const msgs=document.getElementById('msgs'),chatstep=document.getElementById('chatstep');
+  function chatNext(){
+    if(chatI>=script.length)return false;
+    const m=script[chatI++];
+    const el=document.createElement('div');el.className='msg '+(m.me?'me':'ag');
+    el.innerHTML=(m.me?'':'<div class="who">KIT</div>')+m.t;
+    msgs.appendChild(el);
+    while(msgs.children.length>4)msgs.removeChild(msgs.firstChild);
+    chatstep.textContent=chatI+' / '+script.length;
+    document.querySelectorAll('.wk').forEach(s=>{s.classList.toggle('on',+s.dataset.work===m.w);if(+s.dataset.work===m.w)s.classList.add('done')});
+    const wn=document.getElementById('wknote');if(m.n)wn.textContent=m.n;
+    return true;
+  }
+  msgs.parentElement.addEventListener('click',chatNext);
+  function fwd(){if(slides[i].querySelector('#msgs')&&chatNext())return;show(i+1)}
+  document.getElementById('next').addEventListener('click',fwd);
+  document.getElementById('prev').addEventListener('click',()=>show(i-1));
+  document.getElementById('fs').addEventListener('click',()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}});
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();fwd()}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(i-1)}
+    else if(e.key==='Home')show(0);else if(e.key==='End')show(slides.length-1);
+    else if(e.key==='n'||e.key==='N')notes.hidden=!notes.hidden;
+    else if(e.key==='f'||e.key==='F')document.getElementById('fs').click();
+  });
+  let x0=null;addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)dx<0?fwd():show(i-1);x0=null});
+  let start=0;const h=location.hash.match(/^#s(\d+)$/);if(h)start=+h[1]-1;
+  slides[0].classList.add('active');show(start);
+})();
+</script>
+<div data-stamp="1" hidden><small>оновлено 27 вересня 2026 · версія 3.0.1</small></div>
+</body></html>
