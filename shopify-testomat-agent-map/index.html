@@ -20,6 +20,7 @@
   --g-gate:#ff7a55; --g-entry:#f6e7c4; --g-core:#4fd1b5; --g-author:#b49bff;
   --g-exec:#f5b429; --g-regress:#f97aa8; --g-docs:#6bb0ff; --g-quality:#8fe36b;
   --g-repo:#a9a294;
+  --viz-save:#0a8168;
   --ease:cubic-bezier(.22,.61,.36,1);
   --ease-out:cubic-bezier(.16,1,.3,1);
 }
@@ -274,6 +275,46 @@ svg#map text{font-family:var(--sans);user-select:none}
 }
 .scrim.on{opacity:1;pointer-events:auto}
 
+/* ── мовна секція і фігура ──────────────────────────────────── */
+.viz{margin:0;padding:0}
+.viz-title{font:600 15px var(--sans);color:var(--ink);margin:0 0 4px}
+.viz-sub{font:500 11.5px var(--mono);letter-spacing:.04em;color:var(--ink-3);margin:0 0 20px}
+.viz-row{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center;margin-bottom:18px}
+.viz-lbl{text-align:right}
+.viz-lbl b{display:block;font:600 14.5px var(--sans);color:var(--ink);line-height:1.25}
+.viz-lbl span{display:block;font-size:12.5px;color:var(--ink-3);margin-top:3px;line-height:1.3}
+.viz-track{position:relative;display:flex;align-items:center;gap:12px;min-width:0;
+  border-bottom:1px solid var(--rule);padding-bottom:0}
+.viz-bar{
+  display:block;height:24px;width:0;border-radius:0 4px 4px 0;flex:0 0 auto;
+  transition:width 1.1s var(--ease-out);
+}
+.in .viz-bar{width:var(--w)}
+.viz-bar.cost{background:var(--vermilion)}
+.viz-bar.save{background:var(--viz-save)}
+.viz-val{font:800 21px/1 var(--serif);letter-spacing:-.015em;white-space:nowrap}
+.viz-val.cost{color:var(--vermilion)} .viz-val.save{color:var(--viz-save)}
+.viz-hint{font-size:12.5px;color:var(--ink-3);margin-left:2px;white-space:nowrap}
+.viz-base{font:500 11px var(--mono);color:var(--ink-3);margin:-6px 0 0 218px;letter-spacing:.03em}
+.hero-ratio{
+  display:flex;align-items:baseline;gap:14px;border-top:3px solid var(--ink);
+  padding-top:12px;margin:0 0 26px;
+}
+.hero-ratio b{font:800 clamp(52px,7vw,92px)/.9 var(--serif);letter-spacing:-.04em;color:var(--ink)}
+.hero-ratio span{font-size:16px;color:var(--ink-2);max-width:26ch;line-height:1.35}
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:28px}
+.lang-grid .card h3{font-size:17.5px}
+.lang-grid .num{font:800 30px/1 var(--serif);color:var(--vermilion);letter-spacing:-.02em;display:block;margin-bottom:8px}
+.lang-grid .num.ok{color:var(--viz-save)}
+.concede{border-left:4px solid var(--ochre);padding:2px 0 2px 18px;margin:0 0 26px}
+.concede p{margin-bottom:0}
+@media (max-width:860px){
+  .viz-row{grid-template-columns:1fr;gap:8px}
+  .viz-lbl{text-align:left}
+  .viz-base{margin-left:0}
+  .lang-grid{grid-template-columns:1fr}
+}
+
 /* ── маршрути ───────────────────────────────────────────────── */
 .flowbar{
   position:absolute;left:0;right:0;bottom:0;z-index:25;
@@ -435,6 +476,116 @@ svg#map text{font-family:var(--sans);user-select:none}
       </div>
     </div>
     <div class="src fade-up"><b>Офіційні джерела:</b> <a href="https://platform.claude.com/docs/en/about-claude/glossary">Anthropic, Glossary</a> - «For Claude, a token approximately represents 3.5 English characters»; <a href="https://platform.claude.com/docs/en/about-claude/pricing">Anthropic, Pricing</a> - прайс за мільйон токенів і примітка про новий токенізатор; <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective context engineering for AI agents</a> - «attention budget» і context rot; <a href="https://www.anthropic.com/engineering/code-execution-with-mcp">Code execution with MCP</a> - приклад переходу зі 150 000 токенів на 2 000, економія 98,7 %.</div>
+  </div>
+</section>
+
+<section class="band" id="language">
+  <div class="wrap">
+    <p class="kicker fade-up">Мова</p>
+    <h2 class="fade-up">А чи не дешевше було англійською</h2>
+
+    <div class="concede fade-up">
+      <p class="lede">Так, українська дорожча. Це не думка, це властивість токенізації: той самий
+      символ кирилиці коштує більше за латинський. Заперечувати тут нічого - краще зміряти,
+      <b>на чому саме</b> вона дорожча. Виявляється, лише на тому, що не росте.</p>
+    </div>
+
+    <div class="grid g2 fade-up" style="align-items:start">
+      <div>
+        <h3>Надбавка існує і ось вона</h3>
+        <p>Порівняння чесне: ті самі символи, пораховані як кирилиця і як латиниця. Різниця -
+        це і є ціна мови, без домішки «а перекладач написав би коротше».</p>
+        <table>
+          <tr><th>Шар</th><th>Токенів</th><th>Якби латиниця</th><th>Надмір</th></tr>
+          <tr><td><code>SKILL.md</code> - інструкція агента</td><td>35&nbsp;481</td><td>24&nbsp;723</td><td><b>1,44&times;</b></td></tr>
+          <tr><td><code>docs/20-conventions/</code></td><td>61&nbsp;133</td><td>44&nbsp;627</td><td>1,37&times;</td></tr>
+          <tr><td><code>docs/30-adr/</code> - 27 рішень</td><td>97&nbsp;556</td><td>66&nbsp;480</td><td>1,47&times;</td></tr>
+          <tr><td>коментарі й докстрінги в коді</td><td>271&nbsp;558</td><td>226&nbsp;559</td><td>1,20&times;</td></tr>
+        </table>
+        <p style="margin-top:14px">У контексті сесії з цього висить одне: <code>SKILL.md</code>.
+        Решта або читається зрідка, або не читається взагалі - коментарі в коді агент не відкриває,
+        їх читає людина. Отже реальна надбавка - <b>10 758 токенів</b>, і вона стала.</p>
+      </div>
+      <div>
+        <div class="hero-ratio">
+          <b>18,7&times;</b>
+          <span>стільки токенів скрипти прибирають за один цикл проти того, що додає вся українська</span>
+        </div>
+        <figure class="viz">
+          <p class="viz-title">Один цикл «написати кейси плюс прогнати»</p>
+          <p class="viz-sub">токенів · лінійна шкала · заміряно на файлах репо</p>
+          <div class="viz-row">
+            <div class="viz-lbl"><b>Додає українська</b><span>інструкція, яка висить у контексті</span></div>
+            <div class="viz-track" data-tip="skill">
+              <i class="viz-bar cost" style="--w:5.34%"></i>
+              <b class="viz-val cost">10&nbsp;758</b>
+            </div>
+          </div>
+          <div class="viz-row">
+            <div class="viz-lbl"><b>Прибирають скрипти</b><span>дані, які інакше довелось би читати</span></div>
+            <div class="viz-track" data-tip="scripts">
+              <i class="viz-bar save" style="--w:100%"></i>
+              <b class="viz-val save">201&nbsp;289</b>
+            </div>
+          </div>
+          <p class="viz-base">знімок дерева 57&nbsp;011 · звіт прогону 106&nbsp;305 · реєстр фікстур 37&nbsp;973</p>
+        </figure>
+        <p style="margin-top:20px">І це лише один цикл. На повний прохід із лінтом, журналом подій і
+        backlog скрипти тримають поза контекстом <b>664 тисячі токенів</b> - у 62 рази більше за
+        всю надбавку за мову.</p>
+      </div>
+    </div>
+
+    <div class="lang-grid fade-up">
+      <div class="card">
+        <span class="num ok">0,1&nbsp;%</span>
+        <h3>Продукт і так англійською</h3>
+        <p>Стільки кирилиці в чернетках кейсів: 573 140 символів, майже все латиниця. Правило друге
+        в <code>AGENTS.md</code> вимагає англійську в назві, кроках і очікуваних результатах.</p>
+        <p>Тобто українською написане те, що читає оператор, і його обсяг сталий. Росте англійська
+        частина - кейси. Рахунок масштабується по ній.</p>
+      </div>
+      <div class="card">
+        <span class="num ok">&times;0,1</span>
+        <h3>Кеш з’їдає решту</h3>
+        <p>Інструкція - стабільний початок запиту, тому після першого виклику вона читається з кешу.
+        Офіційний прайс: читання з кешу коштує десяту частину входу, $0,50 замість $5 за мільйон.</p>
+        <p>Надбавка платиться один раз за сесію повністю, далі - по десять центів з долара.</p>
+      </div>
+      <div class="card">
+        <span class="num">38 с</span>
+        <h3>Стільки коштує суперечка</h3>
+        <p>10 758 токенів на сесію в 40 ходів - близько <b>$0,26</b> з кешуванням. За ставки $25 на
+        годину це 38 секунд людського часу.</p>
+        <p>Якщо робота чужою мовою забирає бодай хвилину додаткової уваги за сесію, обмін уже
+        збитковий. І це ще до питання, чи не з’явиться в перекладі одна неточність.</p>
+      </div>
+    </div>
+
+    <div class="grid g2 fade-up" style="margin-top:30px">
+      <div>
+        <h3>Що тут справді коштувало дорого</h3>
+        <p>Не текст. <b>27 ADR</b>, і кожен названий не ідеєю, а інцидентом, який його спричинив:
+        бекап, що відрапортував «14 кейсів», маючи 14 повідомлень про помилку; правка назви, яка
+        тихо зняла теги з 46 кейсів; 25 кейсів, записаних «успішно» і всіх без осі B.</p>
+        <p>Ці рішення не перекладаються - вони знаходяться. І знаходяться в розмові, у брейнштормі,
+        у перечитуванні власного прогону через тиждень. Тобто тією мовою, якою людина думає.</p>
+      </div>
+      <div>
+        <p class="quote">Мораторій знятий, бо три тижні не діяв.</p>
+        <p>ADR-025, і це найдорожча знахідка проєкту. Правило стояло у трьох документах, було
+        узгоджене й повторене - і порушувалось на кожній сесії, поки під нього не написали код.</p>
+        <p>Щоб таке побачити, треба помітити тонкий візерунок у власній поведінці за три тижні.
+        Це не робота перекладача. Саме з цієї знахідки виросла вся лінія гейтів, яку видно на карті
+        вище - і вона економить на два порядки більше, ніж коштує мова, якою її придумали.</p>
+      </div>
+    </div>
+
+    <div class="src fade-up"><b>Як рахувалось:</b> символи взяті з живих файлів репо на зрізі
+    <code>155eaea</code>; кирилиця рахована по 2 символи на токен, латиниця й код - по 3,5, колонка
+    «якби латиниця» ділить усі символи на 3,5. Ціни - офіційний прайс Claude Opus 5: $5 за мільйон
+    вхідних токенів, читання з кешу $0,50. Палітру фігури звірено валідатором на розрізнюваність
+    при дальтонізмі.</div>
   </div>
 </section>
 
@@ -942,6 +1093,27 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ─────────────────────── поява секцій ─────────────────────── */
+
+/* ── фігура мовної секції: підказка на смужці ─────────────────── */
+var VIZ_TIP = {
+  skill: 'SKILL.md: 35 481 токен як є проти 24 723, якби ті самі символи були латиницею. Різниця висить у контексті всю сесію.',
+  scripts: 'Знімок дерева 57 011 + звіт прогону 106 305 + реєстр фікстур 37 973. Жоден із трьох файлів у контекст не заходить: їх читають скрипти.'
+};
+document.querySelectorAll('.viz-track[data-tip]').forEach(function(tr){
+  var box = document.createElement('div');
+  box.className = 'tip';
+  box.style.position = 'absolute'; box.style.zIndex = '30'; box.style.maxWidth = '300px';
+  box.innerHTML = '<p class="tw" style="margin:0">' + VIZ_TIP[tr.dataset.tip] + '</p>';
+  tr.appendChild(box);
+  tr.addEventListener('mouseenter', function(){ box.classList.add('on'); });
+  tr.addEventListener('mouseleave', function(){ box.classList.remove('on'); });
+  tr.addEventListener('mousemove', function(ev){
+    var r = tr.getBoundingClientRect();
+    var x = Math.min(ev.clientX - r.left + 14, Math.max(0, r.width - 310));
+    box.style.left = x + 'px'; box.style.top = '34px';
+  });
+});
+
 var io = new IntersectionObserver(function(es){
   es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
 },{threshold:.12});
