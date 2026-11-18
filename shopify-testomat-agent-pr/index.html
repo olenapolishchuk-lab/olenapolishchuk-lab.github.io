@@ -121,6 +121,25 @@
   <li>Дасть посилання і текст для <code class="inl">#qa-ecom-team</code> - кидаєш його в канал, щоб хтось апрувнув.</li>
 </ol>
 
+<h2>Руками, без промта</h2>
+<p>Якщо з git на «ти» - шлях той самий, тільки команди свої. Гілку називаємо з суті
+правки: <code class="inl">fix/slider-step-1440</code>, <code class="inl">docs/onboarding-typo</code>,
+<code class="inl">feat/case-template</code>.</p>
+<pre>git switch main &amp;&amp; git pull
+git switch -c fix/коротка-назва
+# правимо
+git add -A
+git commit -m "Що змінено і навіщо"
+git push -u origin fix/коротка-назва
+gh pr create --base main --fill</pre>
+<p>Без <code class="inl">gh</code> посилання на створення PR друкує сам
+<code class="inl">git push</code> - досить відкрити його в браузері. Якщо клон ще зі старою
+адресою, спершу переціль ремоут:</p>
+<pre>git remote set-url origin https://github.com/betterme-dev/shopify-testomat-agent.git</pre>
+<p>Чого не треба: качати ZIP замість <code class="inl">git pull</code>, комітити локально
+в <code class="inl">main</code>, правити <code class="inl">.state/</code> - це журнал агента,
+його веде сам агент.</p>
+
 <h2>Чому саме так, а не просто зберегти файл</h2>
 <p>Репо живе в організації <code class="inl">betterme-dev</code>, і там діє правило компанії:
 у головну гілку нічого не потрапляє без pull request і одного апрува. Правило однакове для
