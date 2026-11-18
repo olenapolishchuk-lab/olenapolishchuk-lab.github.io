@@ -96,12 +96,12 @@
 
 Зроби по порядку, не питаючи дозволу на кожен крок:
 1. Перевір ремоут: має бути https://github.com/betterme-dev/shopify-testomat-agent.git. Якщо стоїть стара адреса bttrm-qa-lab - переціль.
-2. git switch main і git pull.
-3. Створи гілку, назва з суті правки латиницею: fix/..., docs/... або feat/...
+2. git switch main і git pull. Гілку заводь від свіжого main: merge-комітів усередині PR бути не повинно.
+3. Назва гілки латиницею, з типу і суті: fix/slider-step-1440, docs/onboarding-typo, feat/case-template.
 4. Внеси правку, яку я описую нижче.
 5. Поясни простими словами, що саме зміниться. Діфф показуй, тільки якщо я попрошу.
-6. Після мого «так» закоміть українською і запуш гілку.
-7. Відкрий pull request у main.
+6. Після мого «так» закоміть і запуш гілку.
+7. Відкрий pull request. Назва і опис - англійською. Назва у форматі &quot;type: short summary&quot;, де type це feat, fix, docs, chore, ci або refactor. Опис заповни за шаблоном репо (.github/pull_request_template.md): What changed, Why, How to verify. Постав лейбл, що відповідає типу.
 8. Дай мені посилання на PR і готовий текст для #qa-ecom-team з проханням апрувнути.
 
 Якщо щось не виходить - поясни простими словами, що саме зламалось і що потрібно від мене. Не лишай гілку незапушеною і нічого не пиши в main.
@@ -132,6 +132,15 @@ git add -A
 git commit -m "Що змінено і навіщо"
 git push -u origin fix/коротка-назва
 gh pr create --base main --fill</pre>
+<p><b>Назва і опис PR - англійською.</b> Назва у форматі
+<code class="inl">type: short summary</code>, де type це <code class="inl">feat</code>,
+<code class="inl">fix</code>, <code class="inl">docs</code>, <code class="inl">chore</code>,
+<code class="inl">ci</code> або <code class="inl">refactor</code>. Опис заповнюється за
+шаблоном, який GitHub підставить сам: What changed, Why, How to verify. Лейбл ставимо той,
+що збігається з типом у назві.</p>
+<p>Гілку заводимо від свіжого <code class="inl">main</code> - merge-комітів усередині PR
+бути не повинно. При злитті тиснемо <b>Squash and merge</b>: у головну гілку їде один
+охайний коміт замість усіх проміжних.</p>
 <p>Без <code class="inl">gh</code> посилання на створення PR друкує сам
 <code class="inl">git push</code> - досить відкрити його в браузері. Якщо клон ще зі старою
 адресою, спершу переціль ремоут:</p>
