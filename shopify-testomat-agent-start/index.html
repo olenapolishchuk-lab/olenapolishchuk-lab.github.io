@@ -71,7 +71,7 @@
   до «написала перший кейс і прогнала його». Разом близько години, з яких сорок хвилин -
   чекання доступів.</p>
 
-<p class="page-stamp" data-stamp="1">Оновлено <b>25 листопада 2026</b> · версія скіла <code>12.0.0</code> · джерело - <code>audit-2026-09-03/07-onboarding.html</code> у репо</p>
+<p class="page-stamp" data-stamp="1">Оновлено <b>25 листопада 2026</b> · версія скіла <code>12.0.1</code> · джерело - <code>audit-2026-09-03/07-onboarding.html</code> у репо</p>
 </header>
 
 <div class="card ink">
@@ -343,14 +343,14 @@
     <tr><td>Shopify Admin</td><td>не перевірить фікстури, теми й наявність товарів</td><td>конектор, крок 02</td></tr>
     <tr><td>Браузер (вбудований)</td><td>не виміряє обчислені стилі й не наведе мишу</td><td>вбудований, дозволу не треба</td></tr>
     <tr><td><b>Справжній браузер</b> - <code>tools/qa-browser</code></td><td>не натисне Tab по-справжньому, не покаже рамку фокуса і не прочитає дерево доступності. Вбудована панель клавіші в сторінку <b>не доставляє взагалі</b>: контрольна кнопка отримує нуль натискань, тому «Enter не працює» звідти - артефакт інструмента, а не дефект</td><td>у репо. <b>Скажи Claude «постав справжній браузер» - він зробить сам.</b> Якщо хочеться руками: <code>cd tools/qa-browser &amp;&amp; npm ci &amp;&amp; npx playwright install chromium</code>. Один раз на машину, близько 560 МБ</td></tr>
-    <tr><td><b>Підпис Shopify</b> - обов’язково, Mac і Windows</td><td>не зайде на <code>store</code>: бот-захист віддає 429 і «Just a moment...», а кит зупиняє прогін з кодом 4</td><td>адмінка Shopify, Crawler access. <b>Встав Claude промт із картки нижче.</b> Від тебе - скопіювати три значення, Claude їх не бачить. Підпис діє місяць</td></tr>
+    <tr><td><b>Підпис Shopify</b> - обов’язково, Mac і Windows</td><td>не зайде на <code>store</code>: бот-захист віддає 429 і «Just a moment...», а кит зупиняє прогін з кодом 4</td><td>адмінка Shopify, Crawler access. <b>Встав Claude промт із картки нижче.</b> Від тебе - скопіювати три значення, Claude їх не бачить. Строк обираєш сам: бери найдовший</td></tr>
     <tr><td><b>iOS Safari</b> - симулятор iPhone, тільки Mac</td><td>не побачить багів Safari: клавіатура, що зсуває хедер, інерція скролу, дотики пальцем. На Windows працює тільки тригер, який каже, чи потрібен задачі iOS</td><td>у репо. <b>Встав Claude промт із картки нижче - він налаштує сам.</b> Від тебе - Apple ID і пароль Mac. Близько 25 ГБ на диску</td></tr>
   </tbody>
 </table>
 
 <div class="card" id="prompt-signature">
   <h3>Підпис Shopify: промт для свого Claude</h3>
-  <p><code class="inl">store.betterme.world</code> пропускає автоматичний трафік лише з підписом Shopify-краулера. Без нього сторінки віддають 429 або челендж Cloudflare, і такий прогін нічого не доводить. Тому кит без підпису на <code class="inl">store</code> не ходить зовсім. На Mac підпис лежить у Keychain, на Windows - у <code class="inl">.env</code>-файлі поза репо. Підпис діє місяць, за три дні до кінця кит попереджає.</p>
+  <p><code class="inl">store.betterme.world</code> пропускає автоматичний трафік лише з підписом Shopify-краулера. Без нього сторінки віддають 429 або челендж Cloudflare, і такий прогін нічого не доводить. Тому кит без підпису на <code class="inl">store</code> не ходить зовсім. На Mac підпис лежить у Keychain, на Windows - у <code class="inl">.env</code>-файлі поза репо. Строк дії обираєш, коли створюєш підпис, - бери найдовший. За три дні до кінця кит попереджає.</p>
   <p>Відкрий Claude Code у теці кита і встав промт нижче. Значення з адмінки копіюєш ти, Claude їх не читає. Той самий текст у репо: <code class="inl">tools/qa-browser/signature-setup-prompt.md</code>.</p>
   <pre style="white-space:pre-wrap">Підключи на цьому комп’ютері підпис Shopify-краулера для кита. Без нього
 `store.betterme.world` віддає 429 і сторінку «Just a moment...», а кит зупиняється з
@@ -369,7 +369,8 @@ headers` не запускаєш ніколи. Перевіряєш тільки
 3. Mac. Перевір, що вже збережено: `scripts/crawler-signature.sh status`. Якщо
    всі три значення є і «Діє до» пізніше за сьогодні - переходь до кроку 7.
 4. Попроси мене створити підпис: адмінка Shopify → Online Store → Preferences →
-   Crawler access → Create signature. Shopify покаже три значення:
+   Crawler access → Create signature, домен `store.betterme.world`, у полі
+   «Expires in» найдовший строк. Shopify покаже три значення:
    `Signature-Input`, `Signature`, `Signature-Agent`. Скажи мені відкрити окрему
    вкладку Terminal у теці кита і запустити там `scripts/crawler-signature.sh save`.
    Скрипт по черзі просить скопіювати кожне значення і натиснути Enter. На екран
@@ -378,11 +379,12 @@ headers` не запускаєш ніколи. Перевіряєш тільки
 5. Запусти `scripts/crawler-signature.sh status`. Готово, якщо всі три «є» і дата
    «Діє до» в майбутньому.
 6. Windows. Keychain тут немає, підпис береться з `.env`-файла поза репо. Створи
-   порожній файл `%USERPROFILE%\.betterme-signature.env` з п’ятьма ключами без
-   значень: `SHOPIFY_SIGNATURE_SIG1_KEY=`, `SHOPIFY_SIGNATURE_INPUT_KEY_ID=`,
-   `SHOPIFY_SIGNATURE_INPUT_NONCE=`, `SHOPIFY_SIGNATURE_INPUT_CREATED=`,
-   `SHOPIFY_SIGNATURE_INPUT_EXPIRES=`. Попроси мене створити підпис в адмінці
-   (шлях у кроці 4) і вписати значення у файл. Потім задай змінну
+   порожній файл `%USERPROFILE%\.betterme-signature.env` з трьома ключами без
+   значень: `SHOPIFY_SIGNATURE_INPUT=`, `SHOPIFY_SIGNATURE=`,
+   `SHOPIFY_SIGNATURE_AGENT=`. Попроси мене створити підпис в адмінці (шлях у
+   кроці 4) і вставити після `=` три значення з Shopify дослівно, кожне у свій
+   рядок. Нічого не вирізати: `created` і `expires` уже всередині
+   `Signature-Input`. Потім задай змінну
    користувача `QA_SIGNATURE_ENV` зі шляхом до файла
    (`setx QA_SIGNATURE_ENV "%USERPROFILE%\.betterme-signature.env"`) і скажи
    перезапустити Claude Code, щоб змінна підхопилась.
@@ -394,7 +396,8 @@ headers` не запускаєш ніколи. Перевіряєш тільки
 
 Що знати наперед:
 
-- підпис діє обмежений строк, зазвичай місяць. За три дні до кінця кит пише
+- строк дії обираєш, коли створюєш підпис: бери найдовший зі списку. За три дні
+  до кінця кит пише
   «УВАГА: підпис Shopify спливає». Тоді створюєш новий в адмінці і повторюєш крок 4
   або 6;
 - iOS Safari на симуляторі підписати нічим: у WebDriver немає перехоплення
