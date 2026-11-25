@@ -343,8 +343,145 @@
     <tr><td>Shopify Admin</td><td>не перевірить фікстури, теми й наявність товарів</td><td>конектор, крок 02</td></tr>
     <tr><td>Браузер (вбудований)</td><td>не виміряє обчислені стилі й не наведе мишу</td><td>вбудований, дозволу не треба</td></tr>
     <tr><td><b>Справжній браузер</b> - <code>tools/qa-browser</code></td><td>не натисне Tab по-справжньому, не покаже рамку фокуса і не прочитає дерево доступності. Вбудована панель клавіші в сторінку <b>не доставляє взагалі</b>: контрольна кнопка отримує нуль натискань, тому «Enter не працює» звідти - артефакт інструмента, а не дефект</td><td>у репо. <b>Скажи Claude «постав справжній браузер» - він зробить сам.</b> Якщо хочеться руками: <code>cd tools/qa-browser &amp;&amp; npm ci &amp;&amp; npx playwright install chromium</code>. Один раз на машину, близько 560 МБ</td></tr>
+    <tr><td><b>Підпис Shopify</b> - обов’язково, Mac і Windows</td><td>не зайде на <code>store</code>: бот-захист віддає 429 і «Just a moment...», а кит зупиняє прогін з кодом 4</td><td>адмінка Shopify, Crawler access. <b>Встав Claude промт із картки нижче.</b> Від тебе - скопіювати три значення, Claude їх не бачить. Підпис діє місяць</td></tr>
+    <tr><td><b>iOS Safari</b> - симулятор iPhone, тільки Mac</td><td>не побачить багів Safari: клавіатура, що зсуває хедер, інерція скролу, дотики пальцем. На Windows працює тільки тригер, який каже, чи потрібен задачі iOS</td><td>у репо. <b>Встав Claude промт із картки нижче - він налаштує сам.</b> Від тебе - Apple ID і пароль Mac. Близько 25 ГБ на диску</td></tr>
   </tbody>
 </table>
+
+<div class="card" id="prompt-signature">
+  <h3>Підпис Shopify: промт для свого Claude</h3>
+  <p><code class="inl">store.betterme.world</code> пропускає автоматичний трафік лише з підписом Shopify-краулера. Без нього сторінки віддають 429 або челендж Cloudflare, і такий прогін нічого не доводить. Тому кит без підпису на <code class="inl">store</code> не ходить зовсім. На Mac підпис лежить у Keychain, на Windows - у <code class="inl">.env</code>-файлі поза репо. Підпис діє місяць, за три дні до кінця кит попереджає.</p>
+  <p>Відкрий Claude Code у теці кита і встав промт нижче. Значення з адмінки копіюєш ти, Claude їх не читає. Той самий текст у репо: <code class="inl">tools/qa-browser/signature-setup-prompt.md</code>.</p>
+  <pre style="white-space:pre-wrap">Підключи на цьому комп’ютері підпис Shopify-краулера для кита. Без нього
+`store.betterme.world` віддає 429 і сторінку «Just a moment...», а кит зупиняється з
+кодом 4. Роби все сам і після кожного кроку перевіряй результат командою.
+
+Головне правило: значення підпису - секрет. Ти їх не читаєш, не виводиш, не
+вставляєш у чат, у файли репо чи в коміти. Команду `scripts/crawler-signature.sh
+headers` не запускаєш ніколи. Перевіряєш тільки командою `status`: вона показує
+довжину і термін, без значень.
+
+Кроки:
+
+1. Онови кит: `git pull` у теці репо. Перевір, що є `scripts/crawler-signature.sh`.
+2. Визнач систему: `uname`. `Darwin` - це Mac, далі кроки 3-5. Інакше - Windows,
+   крок 6.
+3. Mac. Перевір, що вже збережено: `scripts/crawler-signature.sh status`. Якщо
+   всі три значення є і «Діє до» пізніше за сьогодні - переходь до кроку 7.
+4. Попроси мене створити підпис: адмінка Shopify → Online Store → Preferences →
+   Crawler access → Create signature. Shopify покаже три значення:
+   `Signature-Input`, `Signature`, `Signature-Agent`. Скажи мені відкрити окрему
+   вкладку Terminal у теці кита і запустити там `scripts/crawler-signature.sh save`.
+   Скрипт по черзі просить скопіювати кожне значення і натиснути Enter. На екран
+   він їх не виводить, буфер обміну чистить. Запускаю я сам, бо скрипт чекає
+   Enter після кожного значення. Дочекайся, поки я скажу, що готово.
+5. Запусти `scripts/crawler-signature.sh status`. Готово, якщо всі три «є» і дата
+   «Діє до» в майбутньому.
+6. Windows. Keychain тут немає, підпис береться з `.env`-файла поза репо. Створи
+   порожній файл `%USERPROFILE%\.betterme-signature.env` з п’ятьма ключами без
+   значень: `SHOPIFY_SIGNATURE_SIG1_KEY=`, `SHOPIFY_SIGNATURE_INPUT_KEY_ID=`,
+   `SHOPIFY_SIGNATURE_INPUT_NONCE=`, `SHOPIFY_SIGNATURE_INPUT_CREATED=`,
+   `SHOPIFY_SIGNATURE_INPUT_EXPIRES=`. Попроси мене створити підпис в адмінці
+   (шлях у кроці 4) і вписати значення у файл. Потім задай змінну
+   користувача `QA_SIGNATURE_ENV` зі шляхом до файла
+   (`setx QA_SIGNATURE_ENV "%USERPROFILE%\.betterme-signature.env"`) і скажи
+   перезапустити Claude Code, щоб змінна підхопилась.
+7. Пробний прогін. Запусти `python3 -c "import sys; sys.path.insert(0,'scripts');
+   import store_signature as s; print(s.receipt())"`. Готово, якщо надруковано
+   `source` (`keychain` чи `env`) і `expires_at`. Значень там немає.
+8. Звіт мені: система, звідки береться підпис, до якої дати діє. Окремим рядком -
+   що не вдалось і чому.
+
+Що знати наперед:
+
+- підпис діє обмежений строк, зазвичай місяць. За три дні до кінця кит пише
+  «УВАГА: підпис Shopify спливає». Тоді створюєш новий в адмінці і повторюєш крок 4
+  або 6;
+- iOS Safari на симуляторі підписати нічим: у WebDriver немає перехоплення
+  запитів. Якщо iOS-прогін ловить 429 чи «Just a moment...», це обмеження шару,
+  а не дефект теми;
+- 429 або челендж у прогоні - спершу дивимось у квитку прогону поле
+  `unsigned_store_requests`, і лише потім заводимо баг.</pre>
+</div>
+
+<div class="card" id="prompt-ios">
+  <h3>iOS-симулятор: промт для свого Claude</h3>
+  <p>Кит перевіряє мобільну версію в справжньому Safari на двох версіях: <b>iOS 18</b> на iPhone SE (ширина 375) і <b>iOS 26.5</b> на iPhone 17 (ширина 402). Чи потрібен iOS задачі, вирішує <code class="inl">/full-check</code> сам. Падіння вкладки через пам’ять, браузер усередині Instagram і Apple Pay симулятор не бачить - кит пише їх рядком «додивитись на реальному iPhone».</p>
+  <p>Налаштування одне на машину. Відкрий Claude Code у теці кита, встав промт нижче цілком і чекай: він попросить лише вхід в Apple ID і пароль адміністратора Mac. Той самий текст лежить у репо: <code class="inl">tools/qa-browser/ios-setup-prompt.md</code>.</p>
+  <pre style="white-space:pre-wrap">Налаштуй на цьому Mac iOS-шар кита: Safari на симуляторі iPhone, iOS 18 і
+iOS 26.5, з Appium для справжніх дотиків. Роби все сам, крок за кроком, і після
+кожного кроку перевіряй результат командою, а не на око. Мене кличеш лише у трьох
+випадках: увійти в Apple ID, ввести пароль адміністратора, натиснути щось у вікні
+macOS. Паролі я вводжу сам: команди з `sudo` давай мені одним рядком, щоб я
+запустила їх через `!` у цій сесії.
+
+Правила:
+
+- нічого не комітиш і не міняєш у файлах репо;
+- крок упав - показуєш помилку дослівно і пробуєш виправлення з розділу «Відомі
+  помилки». Якщо там такої помилки немає - зупиняєшся і питаєш мене;
+- довгі завантаження (рантайми iOS важать до 9 ГБ) запускаєш у фоні і кажеш,
+  скільки орієнтовно чекати.
+
+Кроки:
+
+1. Перевір, що це Mac: `uname` має дати `Darwin`. Якщо ні - зупинись і скажи, що
+   iOS-шар працює лише на Mac, а на Windows кит використовує тільки тригер
+   `scripts/ios-risk.py`.
+2. Перевір вільне місце: потрібно щонайменше 25 ГБ (`df -h ~`).
+3. Онови кит: `git pull` у теці репо.
+4. Перевір версію macOS (`sw_vers -productVersion`) і встановлені Xcode
+   (`ls -d /Applications/Xcode*.app` і версія кожного з
+   `Contents/Info.plist`, ключ `CFBundleShortVersionString`).
+   Правило: мажорна версія Xcode має бути не меншою за мажорну версію macOS,
+   інакше Appium не стартує. Перевірені поєднання: macOS 26.5 з Xcode 26.5;
+   macOS 27.2.1 з Xcode 27.2, встановленим поруч із Xcode 26.5.
+   Якщо потрібного Xcode немає - відкрий App Store
+   (`open "macappstore://apps.apple.com/app/id497799835"`) і попроси мене
+   встановити. Якщо App Store дає не ту версію - потрібна є на
+   https://developer.apple.com/download/all/ (потрібен вхід в Apple ID). Дочекайся,
+   поки я скажу, що встановлено. Після встановлення запусти Xcode один раз
+   (`open -a &lt;шлях до Xcode&gt;`) і дочекайся, поки він доставить компоненти.
+5. Дай мені дві команди з `sudo`: вибір Xcode
+   (`sudo xcode-select -s &lt;шлях до Xcode&gt;/Contents/Developer`) і ліцензію
+   (`sudo xcodebuild -license accept`). Потім сам запусти
+   `xcodebuild -runFirstLaunch`.
+6. Завантаж рантайми у фоні: `xcodebuild -downloadPlatform iOS` (поточна iOS,
+   близько 8,5 ГБ) і `xcodebuild -downloadPlatform iOS -buildVersion 18.0`.
+   Перевір: `xcrun simctl list runtimes` показує iOS 18 і iOS 26.x.
+7. Перевір симулятори (`xcrun simctl list devices available`). Потрібні два:
+   iPhone SE (3rd generation) на iOS 18 і iPhone 17 на iOS 26.x. Яких немає -
+   створи: `xcrun simctl create "&lt;назва&gt;" "&lt;тип пристрою&gt;" &lt;id рантайму&gt;`,
+   id рантайму бери з `xcrun simctl list runtimes`.
+8. Дай мені команду `safaridriver --enable`: вона попросить пароль.
+9. Перевір Node.js (`node -v`). Якщо його немає - попроси мене встановити з
+   https://nodejs.org і дочекайся.
+10. Встанови Appium поза репо, у `~/.claude/tools/appium`:
+    `mkdir -p ~/.claude/tools/appium &amp;&amp; cd ~/.claude/tools/appium &amp;&amp; npm init -y &amp;&amp; npm i appium@3`,
+    потім `APPIUM_HOME=$PWD/home npx appium driver install xcuitest`.
+11. Пробний прогін. Запусти iPhone 17: `xcrun simctl boot &lt;UDID&gt;` і
+    `open -a Simulator`. Потім із теки репо:
+    `node tools/qa-browser/exec-plan-ios.mjs --zone keyboard --url https://store.betterme.world/ --sel 'input[type=email]' --out /tmp/ios-smoke.json --udid &lt;UDID&gt; --driver appium`.
+    Перший запуск збирає WebDriverAgent, близько двох хвилин. Готово, якщо у
+    `/tmp/ios-smoke.json` статус `pass`, а у виводі є рядок «Xcode для Appium: ...».
+    На свіжому симуляторі iOS 26 перший дотик іноді йде на підказку Safari - тоді
+    повтори прогін один раз.
+12. Звіт мені: версія macOS, які Xcode стоять і який вибраний, рантайми, назви й
+    UDID обох симуляторів, результат пробного прогону. Окремим рядком - що не
+    вдалось і чому.
+
+Відомі помилки:
+
+- `safaridriver` каже «Could not find any session hosts» на iOS 26.5 під
+  macOS 27. Це пісочниця Apple, налаштуванням не лікується. Для iOS 26.5 на
+  macOS 27 працює тільки `--driver appium`.
+- Appium падає з «DTServiceHubClient failed to bless service hub» або
+  `xcodebuild` з кодом 65. Xcode старіший за macOS: потрібен Xcode з мажором не
+  меншим за macOS (крок 4). Раннер сам бере потрібний Xcode з `/Applications`,
+  якщо `DEVELOPER_DIR` не заданий.
+- Перша сесія на свіжому симуляторі падає по таймауту. Раннер сам перезапускає
+  Safari і пробує ще раз; якщо і це не допомогло - повтори команду.</pre>
+</div>
 
 <div class="card warn">
   <h3>Помилка 403 - це часто не ключ, а мережа</h3>
